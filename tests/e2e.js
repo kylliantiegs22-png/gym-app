@@ -33,12 +33,12 @@ async function run(type,name){
   await pg.click('#tabs a[data-tab=routines]');await pg.click('[data-act=goto][data-to="#/editor/push"]');
   await pg.click('[data-act=swap][data-i="0"]');await pg.fill('#edq','Incline Barbell');await pg.click('[data-act=pick]');
   ok(await pg.locator('text=Incline Barbell Press').count()>=1,name+' swap');
-  await pg.click('[data-act=rm][data-i="5"]');ok(await pg.locator('.card .grow b').count()===5,name+' remove');
+  await pg.click('[data-act=rm][data-i="5"]');ok(await pg.locator('[data-act=rm]').count()===5,name+' remove');
   await pg.click('#tabs a[data-tab=routines]');await pg.fill('#cxname','Sled Push');await pg.click('[data-act=addcustom]');
   await pg.click('[data-act=goto][data-to="#/editor/push"]');await pg.fill('#edq','Sled');await pg.click('[data-act=pick]');
   ok(await pg.locator('text=Sled Push').count()>=1,name+' custom exercise');
   // progress
-  await pg.click('#tabs a[data-tab=progress]');await pg.waitForSelector('svg.chart');
+  await pg.click('#tabs a[data-tab=progress]');await pg.waitForSelector('#prsel');
   ok(await pg.locator('text=Top weight 60 kg').count()===1,name+' progress best');
   // profiles are separate
   await pg.click('#tabs a[data-tab=home]');await pg.click('[data-act=profile][data-id=p2]');

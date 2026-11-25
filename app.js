@@ -7,13 +7,29 @@ const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth
 
 function freshProfile(name){return {name,routines:JSON.parse(JSON.stringify(DEFAULT_ROUTINES)),customEx:[],logs:[],draft:null};}
 function fresh(){return {app:'lifts',v:1,active:'p1',profiles:{p1:freshProfile('Me'),p2:freshProfile('Partner')}};}
-let S;
-function load(){
-  try{const raw=localStorage.getItem(KEY); if(raw){const o=JSON.parse(raw); if(!validateImport(o)) return o;}}catch(e){}
+let S,loadWarning='',saveFailed=false;
+function readStore(keepCorrupt){
+  let raw=null;
+  try{raw=localStorage.getItem(KEY);}catch(e){saveFailed=true;return fresh();}
+  if(raw===null) return fresh();
+  let o=null;try{o=JSON.parse(raw);}catch(e){}
+  const clean=sanitizeState(o,DEFAULT_ROUTINES);
+  if(clean) return clean;
+  if(keepCorrupt){ // never silently overwrite data we could not read: keep a copy
+    try{localStorage.setItem(KEY+'.unreadable-'+Date.now(),raw);}catch(e){}
+    loadWarning='Your saved data could not be read, so the app started fresh. A copy of the old data was kept on this phone.';
+  }
   return fresh();
 }
-function save(){ try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){toast('Could not save: storage full');} }
-S=load();
+function banner(){
+  const el=document.getElementById('banner'); if(!el) return;
+  const m=[]; if(loadWarning) m.push(`<div class="warn" data-testid="load-warning">${esc(loadWarning)} <button class="small" data-act="hidewarn">Hide</button></div>`);
+  if(saveFailed) m.push(`<div class="warn" data-testid="save-warning">This phone is not letting the app save right now, so new workouts may be lost when you close it. Free up space or leave private browsing, and export a backup from Data. <button class="small" data-act="hidesave">Hide</button></div>`);
+  el.innerHTML=m.join('');
+}
+function save(){ try{localStorage.setItem(KEY,JSON.stringify(S)); if(saveFailed&&!blockedAtStart){saveFailed=false;banner();}}catch(e){if(!saveFailed){saveFailed=true;}banner();} }
+let blockedAtStart=false;
+S=readStore(true); blockedAtStart=saveFailed;
 const P=()=>S.profiles[S.active];
 const allEx=()=>BUILTIN.concat(P().customEx);
 const exById=id=>allEx().find(e=>e.id===id)||{id,name:'(removed exercise)',equip:'barbell',muscle:'?'};
@@ -23,6 +39,13 @@ function toast(m){const t=document.getElementById('toast');t.textContent=m;t.cla
 
 // ---------- routing ----------
 function route(){
+  try{ draw(); }
+  catch(e){
+    $app.innerHTML=`<h1>Something went wrong</h1><p class="mute">Your workouts are safe. Export a copy, then reload.</p><div class="row"><button class="primary" data-act="rawexport">Export raw data</button><button data-act="reload">Reload</button></div>`;
+  }
+  banner();
+}
+function draw(){
   const h=(location.hash||'#/').slice(2); const [page,arg]=h.split('/');
   document.querySelectorAll('#tabs a').forEach(a=>a.classList.toggle('on',a.dataset.tab===(page||'home')||(page==='workout'&&a.dataset.tab==='home')||(page==='editor'&&a.dataset.tab==='routines')));
   ({'':home,home,workout,routines:routinesPage,editor,progress,data:dataPage}[page]||home)(arg);
@@ -85,9 +108,9 @@ function editor(id){
   const q=edQuery.toLowerCase();
   const matches=allEx().filter(e=>!q||e.name.toLowerCase().includes(q)||e.muscle.toLowerCase().includes(q)).slice(0,30);
   $app.innerHTML=`<h1>Edit routine</h1><div class="row"><input id="rname" value="${esc(r.name)}" maxlength="24" aria-label="Routine name"><button data-act="rrename" data-id="${id}">Save</button></div>
-  ${r.ex.map((x,i)=>{const ex=exById(x);return `<div class="card row"><div class="grow"><b>${esc(ex.name)}</b><div class="mute">${esc(ex.muscle)} · ${ex.equip}</div></div>
+  ${r.ex.map((x,i)=>{const ex=exById(x);return `<div class="card"><div><b>${esc(ex.name)}</b><div class="mute">${esc(ex.muscle)} · ${ex.equip}</div></div><div class="row end" style="margin-top:8px">
    <button class="small" aria-label="Move up" data-act="up" data-id="${id}" data-i="${i}" ${i===0?'disabled':''}>↑</button><button class="small" aria-label="Move down" data-act="down" data-id="${id}" data-i="${i}" ${i===r.ex.length-1?'disabled':''}>↓</button>
-   <button class="small" data-act="swap" data-id="${id}" data-i="${i}">${edSwap===i?'Cancel':'Swap'}</button><button class="small danger" aria-label="Remove" data-act="rm" data-id="${id}" data-i="${i}">✕</button></div>`}).join('')}
+   <button class="small" data-act="swap" data-id="${id}" data-i="${i}">${edSwap===i?'Cancel':'Swap'}</button><button class="small danger" aria-label="Remove" data-act="rm" data-id="${id}" data-i="${i}">✕</button></div></div>`}).join('')}
   <h2>${edSwap!==null?'Swap with…':'Add exercise'}</h2><input id="edq" placeholder="Search name or muscle" value="${esc(edQuery)}" aria-label="Search exercises">
   <div class="list">${matches.map(e=>`<button data-act="pick" data-id="${id}" data-ex="${e.id}">${esc(e.name)} <span class="tag">${esc(e.muscle)}</span></button>`).join('')||'<p class="mute">No matches.</p>'}</div>
   <div class="row" style="margin-top:16px"><button class="danger" data-act="delroutine" data-id="${id}">Delete routine</button><button class="grow" data-act="goto" data-to="#/routines">Done</button></div>`;
@@ -108,9 +131,10 @@ function progress(){
 }
 function chart(pts){
   if(!pts.length) return '<p class="mute">No data.</p>';
+  if(pts.length===1) return `<div style="padding:20px 4px;text-align:center"><div style="font-size:34px;font-weight:700;letter-spacing:-.02em">${pts[0].top} kg</div><div class="mute">Top weight on ${pts[0].date}. Log this lift again to see your trend.</div></div>`;
   const W=320,H=160,pad=24; const ys=pts.map(x=>x.top); let lo=Math.min(...ys),hi=Math.max(...ys); if(lo===hi){lo-=1;hi+=1;}
   const X=i=>pts.length===1?W/2:pad+i*(W-2*pad)/(pts.length-1), Y=v=>H-pad-(v-lo)/(hi-lo)*(H-2*pad);
-  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Top weight over time"><polyline fill="none" stroke="var(--accent)" stroke-width="2.5" points="${pts.map((x,i)=>X(i)+','+Y(x.top)).join(' ')}"/>${pts.map((x,i)=>`<circle cx="${X(i)}" cy="${Y(x.top)}" r="4" fill="var(--accent)"/>`).join('')}<text x="4" y="14" font-size="11" fill="var(--mute)">${hi} kg</text><text x="4" y="${H-6}" font-size="11" fill="var(--mute)">${lo} kg</text></svg>`;
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Top weight over time"><polyline fill="none" stroke="var(--accent)" stroke-width="2.5" points="${pts.map((x,i)=>X(i)+','+Y(x.top)).join(' ')}"/>${pts.map((x,i)=>`<circle cx="${X(i)}" cy="${Y(x.top)}" r="4" fill="var(--accent)"/>`).join('')}<text x="4" y="14" font-size="12" fill="var(--mute)">${hi} kg</text><text x="4" y="${H-6}" font-size="12" fill="var(--mute)">${lo} kg</text></svg>`;
 }
 
 // ---------- data ----------
@@ -129,7 +153,7 @@ function doImport(file){
   fr.onload=()=>{let o;try{o=JSON.parse(fr.result);}catch(e){toast('Not a valid backup file');return;}
     const err=validateImport(o); if(err){toast(err);return;}
     if(!confirm('Replace everything on this phone with this backup?')) return;
-    S=o; if(!S.profiles[S.active]) S.active=Object.keys(S.profiles)[0]; save(); toast('Restored'); location.hash='#/'; route();};
+    S=sanitizeState(o,DEFAULT_ROUTINES); save(); toast('Restored'); location.hash='#/'; route();};
   fr.readAsText(file);
 }
 
@@ -138,6 +162,10 @@ document.addEventListener('click',ev=>{
   const b=ev.target.closest('[data-act]'); if(!b) return; const a=b.dataset.act,p=P(),id=b.dataset.id,i=+b.dataset.i,j=+b.dataset.j;
   switch(a){
     case 'goto': location.hash=b.dataset.to; break;
+    case 'hidewarn': loadWarning=''; banner(); break;
+    case 'hidesave': saveFailed=false; banner(); break;
+    case 'reload': location.reload(); break;
+    case 'rawexport': {let raw='';try{raw=localStorage.getItem(KEY)||JSON.stringify(S);}catch(e){raw=JSON.stringify(S);} const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([raw],{type:'application/json'}));a.download='lifts-raw-'+today()+'.json';document.body.appendChild(a);a.click();a.remove();break;}
     case 'profile': S.active=id; save(); route(); break;
     case 'rename': {const v=document.getElementById('pname').value.trim(); if(v){p.name=v.slice(0,20); save(); route(); toast('Saved');} break;}
     case 'start': startWorkout(id); break;
@@ -168,6 +196,7 @@ document.addEventListener('change',ev=>{
   if(ev.target.id==='prsel'){prEx=ev.target.value; progress();}
   if(ev.target.id==='imp'&&ev.target.files[0]) doImport(ev.target.files[0]);
 });
+window.addEventListener('storage',ev=>{ if(ev.key===KEY&&ev.newValue){ const prev=S; const n=readStore(false); if(n&&n!==prev){S=n; route();} } });
 if('serviceWorker' in navigator && location.protocol!=='file:') navigator.serviceWorker.register('sw.js').catch(()=>{});
 route();
 })();

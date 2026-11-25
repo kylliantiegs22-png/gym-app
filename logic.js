@@ -44,4 +44,37 @@ function validateImport(obj){
   }
   return null;
 }
-if (typeof module!=='undefined') module.exports={suggest,lastSession,e1rm,volume,bestByDate,validateImport,stepFor,round};
+// ---- defensive loading: keep whatever is valid, drop the rest ----
+const _isObj=o=>o&&typeof o==='object'&&!Array.isArray(o);
+const _str=(s,d,n)=>typeof s==='string'&&s.trim()?s.slice(0,n||40):d;
+const _num=v=>typeof v==='number'&&isFinite(v)&&v>=0&&v<100000;
+const _EQ=['barbell','dumbbell','machine','cable','bodyweight'];
+function sanitizeProfile(p,fallbackName,defaults){
+  p=_isObj(p)?p:{};
+  const routines={};
+  if(_isObj(p.routines)) for(const [id,r] of Object.entries(p.routines)){ if(!_isObj(r)||!Array.isArray(r.ex)) continue; routines[id]={name:_str(r.name,'Routine',24),ex:r.ex.filter(x=>typeof x==='string')}; }
+  if(!Object.keys(routines).length) Object.assign(routines,JSON.parse(JSON.stringify(defaults)));
+  const customEx=(Array.isArray(p.customEx)?p.customEx:[]).filter(e=>_isObj(e)&&typeof e.id==='string'&&typeof e.name==='string'&&e.name).map(e=>({id:e.id,name:e.name.slice(0,40),equip:_EQ.includes(e.equip)?e.equip:'barbell',muscle:_str(e.muscle,'Custom',20)}));
+  const logs=[];
+  (Array.isArray(p.logs)?p.logs:[]).forEach((l,i)=>{
+    if(!_isObj(l)||!Array.isArray(l.entries)) return;
+    const entries=l.entries.filter(e=>_isObj(e)&&typeof e.exId==='string'&&Array.isArray(e.sets)).map(e=>({exId:e.exId,sets:e.sets.filter(s=>_isObj(s)&&_num(+s.w)&&_num(+s.r)&&s.w!==''&&s.r!==''&&s.w!==null&&s.r!==null).map(s=>({w:+s.w,r:+s.r,done:true}))})).filter(e=>e.sets.length);
+    if(!entries.length) return;
+    logs.push({id:typeof l.id==='string'?l.id:'x'+i,date:/^\d{4}-\d{2}-\d{2}$/.test(l.date)?l.date:'1970-01-01',routineId:typeof l.routineId==='string'?l.routineId:'',name:typeof l.name==='string'?l.name.slice(0,24):undefined,entries});
+  });
+  let draft=null;
+  if(_isObj(p.draft)&&typeof p.draft.routineId==='string'&&Array.isArray(p.draft.entries)){
+    const entries=p.draft.entries.filter(e=>_isObj(e)&&typeof e.exId==='string'&&Array.isArray(e.sets)&&e.sets.length).map(e=>({exId:e.exId,nudge:!!e.nudge,sets:e.sets.filter(_isObj).map(s=>({w:_num(s.w)?s.w:'',r:_num(s.r)?s.r:'',done:!!s.done}))})).filter(e=>e.sets.length);
+    if(entries.length) draft={routineId:p.draft.routineId,date:/^\d{4}-\d{2}-\d{2}$/.test(p.draft.date)?p.draft.date:'1970-01-01',entries};
+  }
+  return {name:_str(p.name,fallbackName,20),routines,customEx,logs,draft};
+}
+// returns a clean state, or null when nothing usable is in o
+function sanitizeState(o,defaults){
+  if(!_isObj(o)||!_isObj(o.profiles)) return null;
+  const profiles={};let n=0;
+  for(const [id,p] of Object.entries(o.profiles)){ if(!_isObj(p)) continue; profiles[id]=sanitizeProfile(p,'Person '+(++n),defaults); }
+  const ids=Object.keys(profiles); if(!ids.length) return null;
+  return {app:'lifts',v:typeof o.v==='number'?o.v:1,active:ids.includes(o.active)?o.active:ids[0],profiles};
+}
+if (typeof module!=='undefined') module.exports={sanitizeState,suggest,lastSession,e1rm,volume,bestByDate,validateImport,stepFor,round};
