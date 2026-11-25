@@ -1,0 +1,17 @@
+{
+  "facts": {
+    "workoutShowsWhoseIsIt": false,
+    "samSeesPriyaNumbers": false,
+    "priyaDraftWaiting": true,
+    "priyaValuesIntact": true,
+    "logsPriya": 0,
+    "logsSam": 1,
+    "priyaNext": "40x10",
+    "taps": 33,
+    "appErrors": 0,
+    "errors": []
+  },
+  "findings": [
+    "major: The workout screen never says whose workout it is. If the phone is passed around, sets can be logged into the wrong person."
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "facts": {
+    "canSwapDuringWorkout": false,
+    "finishToast": "Workout saved",
+    "tapsDay1": 28,
+    "benchSuggestion": "102.5x8",
+    "dbSuggestion": "34x8",
+    "ohpSuggestion": "60x10 / 60x9",
+    "weightSelectedOnFocus": false,
+    "taps": 47,
+    "appErrors": 0,
+    "errors": []
+  },
+  "findings": [
+    "major: No way to swap or add an exercise during a workout (machine taken). He must leave, edit the routine permanently, and come back.",
+    "minor: Tapping a weight box puts the caret at the end: he has to delete digits before typing a new weight (gloves/sweat make this fiddly)."
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "facts": {
+    "squatAfterBreak": "102.5x8",
+    "nudgesAfterBreak": 2,
+    "mentionsGap": false,
+    "bestShown": "1000",
+    "canEditPastWorkout": false,
+    "taps": 26,
+    "appErrors": 0,
+    "errors": []
+  },
+  "findings": [
+    "major: After a 7-week gap the app says \"Go heavier\" on 2 lift(s) and never mentions the gap. A returning lifter could injure themselves following it.",
+    "major: A mistyped weight in a past workout cannot be corrected. The only option is Delete, losing the whole session, and the 1000 kg ruins his Progress chart and best."
+  ]
+}

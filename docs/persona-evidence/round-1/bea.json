@@ -1,0 +1,17 @@
+{
+  "facts": {
+    "firstScreenMs": 786,
+    "draftKeptAfterLock": true,
+    "setsTicked": 12,
+    "setsSaved": 5,
+    "nudges": [],
+    "plankWeightPlaceholder": "kg",
+    "taps": 40,
+    "appErrors": 0,
+    "errors": []
+  },
+  "findings": [
+    "major: 7 ticked set(s) vanished at Finish with no warning (a bodyweight set with no weight, or a tick with nothing typed). Push-Up and Plank were never recorded.",
+    "major: Push-Up shows no previous reps on day 3, so she cannot see what to beat."
+  ]
+}
