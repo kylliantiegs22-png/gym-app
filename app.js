@@ -57,8 +57,7 @@ window.addEventListener('hashchange',route);
 function home(){
   const p=P();
   const recent=p.logs.slice(-5).reverse();
-  $app.innerHTML=`<h1>Lifts</h1>
-  <div class="seg" role="group" aria-label="Person">${Object.entries(S.profiles).map(([id,pr])=>`<button data-act="profile" data-id="${id}" class="${id===S.active?'on':''}">${esc(pr.name)}</button>`).join('')}</div>
+  $app.innerHTML=`<div class="hero"><h1>Lifts</h1><p>Who’s lifting today?</p><div class="seg" role="group" aria-label="Person">${Object.entries(S.profiles).map(([id,pr])=>`<button data-act="profile" data-id="${id}" class="${id===S.active?'on':''}">${esc(pr.name)}</button>`).join('')}</div></div>
   ${p.draft?`<div class="card"><b>Workout in progress</b><div class="mute">${esc(p.routines[p.draft.routineId]?.name||'Workout')} · ${p.draft.date}</div><div class="row" style="margin-top:8px"><button class="primary grow" data-act="goto" data-to="#/workout">Resume</button><button class="danger" data-act="discard">Discard</button></div></div>`:''}
   <h2>Start a workout</h2>
   ${Object.entries(p.routines).map(([id,r])=>{const last=[...p.logs].reverse().find(l=>l.routineId===id);return `<div class="card row between"><div><b>${esc(r.name)}</b><div class="mute">${r.ex.length} exercises${last?' · last '+last.date:''}</div></div><button class="primary" data-act="start" data-id="${id}" ${p.draft?'disabled':''}>Start</button></div>`}).join('')}
