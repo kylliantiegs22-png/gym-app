@@ -24,6 +24,7 @@ Pick "Me" or "Partner" on the Home screen; each has separate data. Use **Data â†
     node tests/e2e.js             # end-to-end (Chromium)
     node tests/sweep.js           # every screen, light+dark: overflow, tap size, axe
     node tests/resilience.js      # corrupt/blocked/full storage scenarios
+    node tests/matrix.js          # layout clashes: every screen x 4 screen sizes, worst-case text
     node tests/persona.js 3       # gym-goer playtests -> docs/persona-evidence/round-3
 See `docs/persona-review.md`.
 

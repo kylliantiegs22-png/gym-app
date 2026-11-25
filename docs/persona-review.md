@@ -127,3 +127,5 @@ Evidence: `round-2/`. Run twice with identical results.
 ## Changes since round 2 (not a scored round)
 
 Redesigned flat/ruled look with a side panel; wider button spacing; a 110-exercise library with muscle diagrams. These were verified by the unit, end-to-end (28 checks), resilience, sweep and persona suites, but persona scores have not been re-scored for them.
+
+The diagonal design was checked with `tests/matrix.js` (51 screen/size combinations, from 320 px to 1280 px, with worst-case names): no covered or clipped text, no overlaps, no text running past a slanted edge, and text contrast measured against the fills actually painted (including pseudo-element fills). That check caught three real bugs: white-on-white button text in dark sections, a rest bar hidden behind the desktop sidebar, and long names pushing the top bar wider than the screen.

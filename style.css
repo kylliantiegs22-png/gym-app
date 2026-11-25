@@ -117,3 +117,66 @@ svg.figure .figlabel{font:800 12px "Helvetica Neue",Arial,sans-serif;letter-spac
 .legend span{display:flex;align-items:center;gap:8px}
 .sw{display:inline-block;width:16px;height:16px;background:var(--body)}
 .sw.p{background:var(--accent)}.sw.s{background:var(--accent);opacity:.4}
+
+/* ===== Diagonal direction ===== */
+:root{--sl:12px;--cut:40px;--gut:18px;--pink:#f3c3cb;--hatch:repeating-linear-gradient(135deg,rgba(255,255,255,.07) 0,rgba(255,255,255,.07) 2px,transparent 2px,transparent 16px)}
+@media(min-width:660px){:root{--gut:max(18px,calc((100vw - 644px)/2))}}
+@media(min-width:900px){:root{--gut:max(18px,calc((100vw - 260px - 644px)/2))}}
+main{max-width:none;margin:0;padding:0 var(--gut) 110px}
+/* slanted header band with a thin red edge */
+.band{position:relative;isolation:isolate;margin:0 calc(-1 * var(--gut)) 8px;padding:20px var(--gut) 68px;color:#fff}
+.band::before{content:"";position:absolute;left:0;right:0;top:0;bottom:-8px;background:var(--accent);clip-path:polygon(0 0,100% 0,100% calc(100% - var(--cut)),0 100%);z-index:-2}
+.band::after{content:"";position:absolute;inset:0;background:var(--hatch),var(--maroon);clip-path:polygon(0 0,100% 0,100% calc(100% - var(--cut)),0 100%);z-index:-1}
+.band h1{color:#fff;margin:4px 0 0}
+.band .kicker,.band .mute,.band .back{color:var(--pink)}
+.band .mute{margin-top:8px}
+.band .back{display:inline-block;min-height:44px;line-height:44px;margin:-10px 0 0;font-weight:800;font-size:13px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none}
+/* angled section that rises from the bottom of Home */
+.diag{position:relative;isolation:isolate;margin:30px calc(-1 * var(--gut)) -110px;padding:80px var(--gut) 150px;color:#fff;--edge:#fff;--fill:var(--maroon)}
+.diag::before{content:"";position:absolute;inset:0;background:var(--hatch),var(--maroon);clip-path:polygon(0 var(--cut),100% 0,100% 100%,0 100%);z-index:-1}
+.diag h2{color:var(--pink);border-bottom-color:rgba(255,255,255,.35);margin-top:0}
+.diag .mute{color:var(--pink)}.diag b{color:#fff}
+.diag .logrow{border-bottom-color:rgba(255,255,255,.22)}
+/* parallelogram buttons: the outline is a clipped fill with a clipped inner fill */
+button,.btn{--edge:var(--ink);--fill:var(--bg);position:relative;isolation:isolate;border:0;background:var(--edge);color:var(--ink);padding:10px 26px;clip-path:polygon(var(--sl) 0,100% 0,calc(100% - var(--sl)) 100%,0 100%)}
+button::before{content:"";position:absolute;inset:2px;background:var(--fill);clip-path:polygon(calc(var(--sl) - 1px) 0,100% 0,calc(100% - var(--sl) + 1px) 100%,0 100%);z-index:-1}
+button.primary{--edge:var(--accent);--fill:var(--accent);background:var(--edge);color:var(--accent-ink)}
+button.danger{--edge:var(--accent-text);background:var(--edge);color:var(--accent-text)}
+button.small{padding:6px 22px}
+.chk{padding:0}
+.chk.on{--edge:var(--accent);--fill:var(--accent);background:var(--edge);color:var(--accent-ink)}
+.chip{padding:8px 24px}
+.chip.on{--edge:var(--ink);--fill:var(--ink);background:var(--edge);color:var(--bg)}
+.block button,.diag button,.warn button{--edge:#fff;--fill:var(--maroon);background:var(--edge);color:#fff}
+.block button.primary{--fill:#fff;color:var(--maroon)}
+.block button.danger,.diag button.danger{--edge:#fff;--fill:var(--maroon);color:#fff}
+button:disabled{opacity:.35}
+#menu,#people button,#rest button{clip-path:none;background:transparent}
+#menu::before,#people button::before,#rest button::before,.list button::before{display:none}
+.list button{clip-path:none;border:0;border-bottom:1px solid var(--line);background:transparent;padding:10px 0}
+#people button.on{background:#fff}
+/* slanted tags and number blocks */
+.nudge{clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);padding:3px 18px}
+.idx{flex:none;width:60px;height:40px;background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;clip-path:polygon(12px 0,100% 0,calc(100% - 12px) 100%,0 100%)}
+.idx b{font-size:18px;font-weight:900;letter-spacing:.02em;color:var(--accent-ink);text-transform:none}
+.rrow::before{display:none}
+.rrow .rname{font-size:21px;text-transform:uppercase}
+.chips{margin:0 calc(-1 * var(--gut));padding-left:var(--gut);padding-right:var(--gut)}
+/* rest bar with a slanted top edge */
+#rest{padding-top:24px;min-height:78px;clip-path:polygon(0 24px,100% 0,100% 100%,0 100%)}
+#toast{bottom:104px}
+/* side panel with a slanted edge */
+#tabs{width:min(320px,86vw);padding-right:46px;background-image:var(--hatch);clip-path:polygon(0 0,100% 0,calc(100% - 44px) 100%,0 100%)}
+#tabs a.on{clip-path:polygon(0 0,100% 0,calc(100% - 14px) 100%,0 100%);background:var(--accent);color:var(--accent-ink)}
+@media(min-width:900px){#tabs{width:260px;padding-right:0;clip-path:none}}
+
+/* long names: never push the layout wider than the screen */
+#who{min-width:0;max-width:46vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wordmark{flex:none}
+h1,.exname,.rrow .rname,.logrow b,.kicker{overflow-wrap:anywhere}
+.rrow{gap:12px}
+@media(max-width:400px){.rrow .rname{font-size:18px}.idx{width:52px}.rrow button.primary{padding:10px 20px}}
+#tabs{padding-right:60px}
+#people button{display:block;position:relative;padding-right:44px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#people button.on::after{position:absolute;right:20px;top:50%;margin-top:-7px}
+@media(min-width:900px){#rest{left:260px}#toast{left:calc(50% + 130px)}}

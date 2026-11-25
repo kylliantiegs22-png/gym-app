@@ -43,7 +43,7 @@ function toast(m){const t=document.getElementById('toast');t.textContent=m;t.cla
 function route(){
   try{ draw(); }
   catch(e){
-    $app.innerHTML=`<h1>Something went wrong</h1><p class="mute">Your workouts are safe. Export a copy, then reload.</p><div class="row"><button class="primary" data-act="rawexport">Export raw data</button><button data-act="reload">Reload</button></div>`;
+    $app.innerHTML=`<div class="band"><h1>Something went wrong</h1></div><p class="mute">Your workouts are safe. Export a copy, then reload.</p><div class="row"><button class="primary" data-act="rawexport">Export raw data</button><button data-act="reload">Reload</button></div>`;
   }
   closeMenu(); drawer(); banner(); updateRest(); wake();
 }
@@ -66,13 +66,13 @@ window.addEventListener('hashchange',route);
 function home(){
   const p=P();
   const recent=p.logs.slice(-5).reverse();
-  $app.innerHTML=`<div class="kicker">${esc(p.name)} · ${today()}</div><h1>Train</h1>
-  ${p.draft?`<div class="block"><b>Workout in progress</b><div class="mute">${esc(p.routines[p.draft.routineId]?.name||'Workout')} · ${p.draft.date}</div><div class="row" style="margin-top:10px"><button class="primary grow" data-act="goto" data-to="#/workout">Resume</button><button class="danger" data-act="discard">Discard</button></div></div>`:''}
+  $app.innerHTML=`<div class="band"><div class="kicker">${esc(p.name)} · ${today()}</div><h1>Train</h1></div>
+  ${p.draft?`<div class="block"><b>Workout in progress</b><div class="mute">${esc(p.routines[p.draft.routineId]?.name||'Workout')} · ${p.draft.date}</div><div class="row" style="margin-top:12px"><button class="primary grow" data-act="goto" data-to="#/workout">Resume</button><button class="danger" data-act="discard">Discard</button></div></div>`:''}
   <h2>Pick a session</h2>
-  <div class="rows">${Object.entries(p.routines).map(([id,r])=>{const last=[...p.logs].reverse().find(l=>l.routineId===id);return `<div class="rrow"><div class="grow"><b>${esc(r.name)}</b><div class="mute">${r.ex.length} exercises${last?' · last '+shortDate(last.date):''}</div></div><button class="primary" data-act="start" data-id="${id}" ${p.draft?'disabled':''}>Start</button></div>`}).join('')}</div>
-  <h2>Recent</h2>
-  ${recent.length?recent.map(l=>`<div class="logrow"><div><b>${esc(p.routines[l.routineId]?.name||l.name||'Workout')}</b><div class="mute">${shortDate(l.date)} · ${l.entries.reduce((a,e)=>a+e.sets.filter(s=>s.done).length,0)} sets · ${Math.round(l.entries.reduce((a,e)=>a+volume(e),0))} kg volume</div></div><div class="row"><button class="small" data-act="editlog" data-id="${l.id}">Edit</button><button class="small danger" data-act="dellog" data-id="${l.id}">Delete</button></div></div>`).join(''):'<p class="mute">No workouts yet.</p>'}
-  <h2>Your name</h2><div class="row"><input id="pname" value="${esc(p.name)}" maxlength="20" aria-label="Your name"><button data-act="rename">Save</button></div>`;
+  <div class="rows">${Object.entries(p.routines).map(([id,r],i)=>{const last=[...p.logs].reverse().find(l=>l.routineId===id);return `<div class="rrow"><span class="idx"><b>${String(i+1).padStart(2,'0')}</b></span><div class="grow"><b class="rname">${esc(r.name)}</b><div class="mute">${r.ex.length} exercises${last?' · last '+shortDate(last.date):''}</div></div><button class="primary" data-act="start" data-id="${id}" ${p.draft?'disabled':''}>Start</button></div>`}).join('')}</div>
+  <h2>Your name</h2><div class="row"><input id="pname" value="${esc(p.name)}" maxlength="20" aria-label="Your name"><button data-act="rename">Save</button></div>
+  <section class="diag"><h2>Recent</h2>
+  ${recent.length?recent.map(l=>`<div class="logrow"><div><b>${esc(p.routines[l.routineId]?.name||l.name||'Workout')}</b><div class="mute">${shortDate(l.date)} · ${l.entries.reduce((a,e)=>a+e.sets.filter(s=>s.done).length,0)} sets · ${Math.round(l.entries.reduce((a,e)=>a+volume(e),0))} kg volume</div></div><div class="row"><button class="small" data-act="editlog" data-id="${l.id}">Edit</button><button class="small danger" data-act="dellog" data-id="${l.id}">Delete</button></div></div>`).join(''):'<p class="mute">No workouts yet.</p>'}</section>`;
 }
 
 // ---------- workout ----------
@@ -86,12 +86,12 @@ const fmtSet=(s,ex)=>ex.timed?(+s.w?'+'+s.w+'kg ':'')+s.r+'s':(ex.equip==='bodyw
 const weeksAgo=date=>{const d=daysBetween(date,today());return d>=14?' · '+Math.round(d/7)+' wks ago':'';};
 function workout(){
   const p=P(),d=p.draft;
-  if(!d){$app.innerHTML='<h1>Workout</h1><p class="mute">No workout in progress.</p><button class="primary" data-act="goto" data-to="#/">Back home</button>';return;}
+  if(!d){$app.innerHTML='<div class="band"><h1>Workout</h1></div><p class="mute">No workout in progress.</p><button class="primary" data-act="goto" data-to="#/">Back home</button>';return;}
   const gaps=d.editId?[]:d.entries.map(e=>lastSession(p.logs,e.exId)).filter(Boolean).map(l=>daysBetween(l.date,today()));
   const gap=gaps.length?Math.max(...gaps):0;
   const q=wkQuery.toLowerCase(),inUse=d.entries.map(e=>e.exId);
   const matches=wkPick?allEx().filter(e=>!inUse.includes(e.id)&&(!q||e.name.toLowerCase().includes(q)||e.muscle.toLowerCase().includes(q))).slice(0,30):[];
-  $app.innerHTML=`<h1>${esc(p.routines[d.routineId]?.name||'Workout')}</h1><div class="mute"><b>${esc(p.name)}</b> · ${d.date}${d.editId?' · editing a past workout':' · target '+REP_MIN+'–'+REP_MAX+' reps'}</div>
+  $app.innerHTML=`<div class="band"><h1>${esc(p.routines[d.routineId]?.name||'Workout')}</h1><div class="mute"><b>${esc(p.name)}</b> · ${d.date}${d.editId?' · editing a past workout':' · target '+REP_MIN+'–'+REP_MAX+' reps'}</div></div>
   ${gap>28?`<div class="note"><b>Welcome back</b><div class="mute">It has been ${Math.round(gap/7)} weeks since a lift here. Last weights are shown, with no “go heavier”. Ease in.</div></div>`:''}
   ${d.entries.map((e,i)=>{const ex=exById(e.exId);const last=lastSession(p.logs,e.exId);const wph=ex.equip==='bodyweight'||ex.timed?'+kg':'kg';return `<div class="card" data-e="${i}">
    <div class="row between"><div class="grow"><span class="exname">${esc(ex.name)}</span> ${e.nudge?`<span class="nudge">Go heavier +${STEP_LABEL[ex.equip]}</span>`:''}<div class="mute">${last?'Last: '+last.sets.map(s=>fmtSet(s,ex)).join(', ')+weeksAgo(last.date):'First time — pick a comfortable weight'}</div></div>${d.editId?'':`<button class="small" data-act="swapwk" data-i="${i}">Swap</button>`}</div>
@@ -128,7 +128,7 @@ function finish(){
 // ---------- routines / editor ----------
 function routinesPage(){
   const p=P(); edSwap=null; edQuery='';
-  $app.innerHTML=`<h1>Routines</h1>${Object.entries(p.routines).map(([id,r])=>`<div class="card row between"><div><b>${esc(r.name)}</b><div class="mute">${r.ex.length} exercises</div></div><button data-act="goto" data-to="#/editor/${id}">Edit</button></div>`).join('')}
+  $app.innerHTML=`<div class="band"><h1>Routines</h1></div>${Object.entries(p.routines).map(([id,r])=>`<div class="card row between"><div><b>${esc(r.name)}</b><div class="mute">${r.ex.length} exercises</div></div><button data-act="goto" data-to="#/editor/${id}">Edit</button></div>`).join('')}
   <button data-act="newroutine">+ New routine</button>
   <h2>Custom exercise</h2><div class="card"><input id="cxname" placeholder="Name" maxlength="40" aria-label="Exercise name">
   <div class="row" style="margin-top:10px"><select id="cxequip" aria-label="Equipment">${Object.keys(EQUIP_STEP).map(k=>`<option>${k}</option>`).join('')}</select><select id="cxgroup" aria-label="Muscle group">${GROUPS.map(g=>`<option>${g}</option>`).join('')}</select></div><div style="margin-top:10px"><button data-act="addcustom">Add exercise</button></div></div>`;
@@ -138,7 +138,7 @@ function editor(id){
   const p=P(),r=p.routines[id]; if(!r){location.hash='#/routines';return;}
   const q=edQuery.toLowerCase();
   const matches=allEx().filter(e=>!q||e.name.toLowerCase().includes(q)||e.muscle.toLowerCase().includes(q)).slice(0,30);
-  $app.innerHTML=`<h1>Edit routine</h1><div class="row"><input id="rname" value="${esc(r.name)}" maxlength="24" aria-label="Routine name"><button data-act="rrename" data-id="${id}">Save</button></div>
+  $app.innerHTML=`<div class="band"><h1>Edit routine</h1></div><div class="row"><input id="rname" value="${esc(r.name)}" maxlength="24" aria-label="Routine name"><button data-act="rrename" data-id="${id}">Save</button></div>
   ${r.ex.map((x,i)=>{const ex=exById(x);return `<div class="card"><div><b>${esc(ex.name)}</b><div class="mute">${esc(ex.muscle)} · ${ex.equip}</div></div><div class="row end" style="margin-top:8px">
    <button class="small" aria-label="Move up" data-act="up" data-id="${id}" data-i="${i}" ${i===0?'disabled':''}>↑</button><button class="small" aria-label="Move down" data-act="down" data-id="${id}" data-i="${i}" ${i===r.ex.length-1?'disabled':''}>↓</button>
    <button class="small" data-act="swap" data-id="${id}" data-i="${i}">${edSwap===i?'Cancel':'Swap'}</button><button class="small danger" aria-label="Remove" data-act="rm" data-id="${id}" data-i="${i}">✕</button></div></div>`}).join('')}
@@ -159,7 +159,7 @@ function exListHTML(){
   return (list.map(e=>`<a class="exrow" href="#/exercise/${esc(e.id)}"><span class="mini">${figure(e,{mini:true})}</span><span class="grow"><span class="exname">${esc(e.name)}</span><span class="mute sub">${esc(e.muscle)} · ${e.equip}</span></span><span class="chev" aria-hidden="true">›</span></a>`).join('')||'<p class="mute">No matches. Try another word or filter.</p>')+`<div class="mute count">${list.length} of ${allEx().length}</div>`;
 }
 function exercises(){
-  $app.innerHTML=`<div class="kicker">Library</div><h1>Exercises</h1>
+  $app.innerHTML=`<div class="band"><div class="kicker">Library</div><h1>Exercises</h1></div>
   <input id="exq" type="search" placeholder="Search name or muscle" value="${esc(exQ)}" aria-label="Search exercises" autocomplete="off">
   <div class="chips" role="group" aria-label="Muscle group">${['All',...GROUPS].map(g=>`<button class="chip ${g===exG?'on':''}" data-act="exgroup" data-g="${g}" aria-pressed="${g===exG}">${g}</button>`).join('')}</div>
   <select id="exequip" aria-label="Equipment"><option value="all">All equipment</option>${Object.keys(EQUIP_STEP).map(k=>`<option value="${k}" ${k===exE?'selected':''}>${k}</option>`).join('')}</select>
@@ -171,7 +171,7 @@ function exercise(id){
   const m=musclesOf(ex),p=P();
   const hist=bestByDate(p.logs,ex.id),best=hist.length?Math.max(...hist.map(x=>x.top)):0;
   const load=ex.timed?'Logged in seconds. Add weight only if you use some.':ex.equip==='bodyweight'?'Bodyweight. Enter a weight only when you add some.':'Goes up in '+STEP_LABEL[ex.equip]+' steps.';
-  $app.innerHTML=`<a class="back" href="#/exercises">‹ Exercises</a><div class="kicker">${esc(ex.muscle)} · ${ex.equip}</div><h1>${esc(ex.name)}</h1>
+  $app.innerHTML=`<div class="band"><a class="back" href="#/exercises">‹ Exercises</a><div class="kicker">${esc(ex.muscle)} · ${ex.equip}</div><h1>${esc(ex.name)}</h1></div>
   <div class="fig">${figure(ex,{labels:true})}</div>
   <div class="legend"><span><i class="sw p"></i>Primary</span><span><i class="sw s"></i>Secondary</span></div>
   <h2>Muscles worked</h2>
@@ -187,10 +187,10 @@ let prEx=null;
 function progress(){
   const p=P();
   const done=[...new Set(p.logs.flatMap(l=>l.entries.map(e=>e.exId)))];
-  if(!done.length){$app.innerHTML='<h1>Progress</h1><p class="mute">Log a workout to see progress.</p>';return;}
+  if(!done.length){$app.innerHTML='<div class="band"><h1>Progress</h1></div><p class="mute">Log a workout to see progress.</p>';return;}
   if(!done.includes(prEx)) prEx=done[0];
   const pts=bestByDate(p.logs,prEx);
-  $app.innerHTML=`<h1>Progress</h1><select id="prsel" aria-label="Exercise">${done.map(id=>`<option value="${id}" ${id===prEx?'selected':''}>${esc(exById(id).name)}</option>`).join('')}</select>
+  $app.innerHTML=`<div class="band"><h1>Progress</h1></div><select id="prsel" aria-label="Exercise">${done.map(id=>`<option value="${id}" ${id===prEx?'selected':''}>${esc(exById(id).name)}</option>`).join('')}</select>
   <div class="card">${chart(pts)}</div>
   ${pts.length?`<div class="card"><b>Best</b><div class="mute">Top weight ${Math.max(...pts.map(x=>x.top))} kg · est. 1RM ${Math.max(...pts.map(x=>x.e1))} kg · ${pts.length} session${pts.length>1?'s':''}</div></div>`:''}
   ${pts.slice().reverse().map(x=>`<div class="row between mute"><span>${x.date}</span><span>${x.top} kg top · e1RM ${x.e1}</span></div>`).join('')}`;
@@ -205,7 +205,7 @@ function chart(pts){
 
 // ---------- data ----------
 function dataPage(){
-  $app.innerHTML=`<h1>Data</h1><p class="mute">Everything is stored on this phone only. Export a backup now and then, and use it to move data to a new phone.</p>
+  $app.innerHTML=`<div class="band"><h1>Data</h1></div><p class="mute">Everything is stored on this phone only. Export a backup now and then, and use it to move data to a new phone.</p>
   <div class="card"><b>Back up</b><div class="mute">Saves both people's data.</div><div style="margin-top:8px"><button class="primary" data-act="export">Export backup</button></div></div>
   <div class="card"><b>Restore</b><div class="mute">Replaces everything on this phone with the backup.</div><div style="margin-top:8px"><input type="file" id="imp" accept="application/json,.json" aria-label="Backup file"></div></div>
   <div class="card"><b>Erase all</b><div style="margin-top:8px"><button class="danger" data-act="erase">Erase everything</button></div></div>`;

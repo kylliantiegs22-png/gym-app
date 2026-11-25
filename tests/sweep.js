@@ -1,7 +1,7 @@
 // Visual sweep: every screen, light+dark, 390x844. node tests/sweep.js  (server on :8080, axe-core path via AXE env)
 const nav=async(pg,t)=>{await pg.click('#menu');await pg.click('#tabs a[data-tab='+t+']');};
 const prof=async(pg,id)=>{await pg.click('#menu');await pg.click('#people [data-id='+id+']');};
-const {chromium}=require('playwright');const fs=require('fs');
+const {chromium}=require('playwright');const fs=require('fs');const clashes=require('./clash.js');
 const AXE=fs.readFileSync(process.env.AXE||'/tmp/axe/node_modules/axe-core/axe.min.js','utf8');
 const OUT=process.env.OUT||'/tmp/sweep';fs.mkdirSync(OUT,{recursive:true});
 let hard=0;
@@ -11,7 +11,7 @@ async function checks(pg,label){
     document.querySelectorAll('body *').forEach(e=>{if(e.children.length)return;const t=e.textContent.trim();if(!t)return;const fs=parseFloat(getComputedStyle(e).fontSize);if(fs<12)o.tiny.push(t.slice(0,15)+' '+fs);if(/\p{Extended_Pictographic}/u.test(t)&&!/^[✓↑↓✕−]$/.test(t))o.emoji.push(t.slice(0,10));});
     return o;});
   await pg.evaluate(AXE);const ax=await pg.evaluate(()=>axe.run(document,{runOnly:['wcag2a','wcag2aa','wcag21aa','wcag22aa']}));
-  const msgs=[];if(r.overflow)msgs.push('horizontal overflow');if(r.small.length)msgs.push('tap<44: '+[...new Set(r.small)].join('; '));if(r.tiny.length)msgs.push('tiny text: '+r.tiny.join('; '));if(r.emoji.length)msgs.push('emoji: '+r.emoji.join(','));
+  const msgs=[];(await clashes(pg)).forEach(c=>msgs.push('clash '+c));if(r.overflow)msgs.push('horizontal overflow');if(r.small.length)msgs.push('tap<44: '+[...new Set(r.small)].join('; '));if(r.tiny.length)msgs.push('tiny text: '+r.tiny.join('; '));if(r.emoji.length)msgs.push('emoji: '+r.emoji.join(','));
   ax.violations.forEach(v=>msgs.push('axe '+v.id+' ('+v.impact+'): '+v.nodes.slice(0,3).map(n=>n.target.join(' ')).join(' | ')));
   console.log((msgs.length?'✗ ':'✓ ')+label+(msgs.length?'\n    '+msgs.join('\n    '):''));if(msgs.length)hard++;
 }
