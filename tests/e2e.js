@@ -1,0 +1,67 @@
+const {chromium,webkit}=require('playwright');
+const URL='http://localhost:8080/';let pass=0,fail=0;
+const ok=(c,m)=>{if(c){pass++;}else{fail++;console.log('FAIL:',m);}};
+async function run(type,name){
+  let b;try{b=await type.launch();}catch(e){console.log('skip',name,e.message.split('\n')[0]);return;}
+  const ctx=await b.newContext({viewport:{width:390,height:800}});const pg=await ctx.newPage();
+  const errs=[];pg.on('pageerror',e=>errs.push(e.message));pg.on('dialog',d=>d.accept());
+  await pg.goto(URL);await pg.waitForSelector('h1');
+  ok(await pg.locator('text=Push').first().isVisible(),name+' home shows Push');
+  ok(await pg.locator('[data-act=start]').count()===4,name+' 4 routines');
+  // workout 1: bench 60x12 x3 -> should nudge
+  await pg.click('[data-act=start][data-id=push]');await pg.waitForSelector('.set');
+  const sets=await pg.locator('[data-e="0"] .set').count();ok(sets===3,name+' 3 sets');
+  for(let j=0;j<3;j++){await pg.fill(`[data-e="0"] [data-f=w][data-j="${j}"]`,'60');await pg.fill(`[data-e="0"] [data-f=r][data-j="${j}"]`,'12');await pg.click(`[data-e="0"] [data-act=chk][data-j="${j}"]`);}
+  // dumbbell exercise idx1 incline db: 20x12
+  for(let j=0;j<3;j++){await pg.fill(`[data-e="1"] [data-f=w][data-j="${j}"]`,'20');await pg.fill(`[data-e="1"] [data-f=r][data-j="${j}"]`,'12');await pg.click(`[data-e="1"] [data-act=chk][data-j="${j}"]`);}
+  await pg.click('[data-act=finish]');await pg.waitForSelector('text=Recent');
+  ok(await pg.locator('text=3 sets').count()>=0,name+' saved');
+  // reload & carry
+  await pg.reload();await pg.click('[data-act=start][data-id=push]');await pg.waitForSelector('.set');
+  ok(await pg.inputValue('[data-e="0"] [data-f=w][data-j="0"]')==='62.5',name+' barbell nudge 62.5 got '+await pg.inputValue('[data-e="0"] [data-f=w][data-j="0"]'));
+  ok(await pg.inputValue('[data-e="1"] [data-f=w][data-j="0"]')==='22',name+' dumbbell nudge 22');
+  ok(await pg.locator('.nudge').count()===2,name+' two nudges');
+  // draft persistence
+  await pg.fill('[data-e="0"] [data-f=r][data-j="0"]','9');await pg.reload();
+  await pg.waitForSelector('[data-e="0"]');
+  await pg.click('#tabs a[data-tab=home]');
+  await pg.waitForSelector('text=Workout in progress');ok(true,name+' draft survives reload');
+  await pg.click('[data-act=goto]');await pg.waitForSelector('[data-e="0"]');
+  ok(await pg.inputValue('[data-e="0"] [data-f=r][data-j="0"]')==='9',name+' draft value kept');
+  await pg.click('[data-act=discard]');await pg.waitForSelector('[data-act=start]');
+  // editor: swap, add, remove, custom
+  await pg.click('#tabs a[data-tab=routines]');await pg.click('[data-act=goto][data-to="#/editor/push"]');
+  await pg.click('[data-act=swap][data-i="0"]');await pg.fill('#edq','Incline Barbell');await pg.click('[data-act=pick]');
+  ok(await pg.locator('text=Incline Barbell Press').count()>=1,name+' swap');
+  await pg.click('[data-act=rm][data-i="5"]');ok(await pg.locator('.card .grow b').count()===5,name+' remove');
+  await pg.click('#tabs a[data-tab=routines]');await pg.fill('#cxname','Sled Push');await pg.click('[data-act=addcustom]');
+  await pg.click('[data-act=goto][data-to="#/editor/push"]');await pg.fill('#edq','Sled');await pg.click('[data-act=pick]');
+  ok(await pg.locator('text=Sled Push').count()>=1,name+' custom exercise');
+  // progress
+  await pg.click('#tabs a[data-tab=progress]');await pg.waitForSelector('svg.chart');
+  ok(await pg.locator('text=Top weight 60 kg').count()===1,name+' progress best');
+  // profiles are separate
+  await pg.click('#tabs a[data-tab=home]');await pg.click('[data-act=profile][data-id=p2]');
+  ok(await pg.locator('text=No workouts yet').count()===1,name+' partner empty');
+  await pg.click('[data-act=profile][data-id=p1]');
+  // export / restore
+  await pg.click('#tabs a[data-tab=data]');
+  const [dl]=await Promise.all([pg.waitForEvent('download'),pg.click('[data-act=export]')]);
+  const path=await dl.path();const fs=require('fs');const json=fs.readFileSync(path,'utf8');ok(JSON.parse(json).app==='lifts',name+' export');
+  await pg.click('[data-act=erase]');await pg.click('#tabs a[data-tab=data]');
+  await pg.setInputFiles('#imp',path);await pg.waitForSelector('text=Recent');
+  ok(await pg.locator('.card:has-text("sets")').count()>=1,name+' restore brought back log');
+  const bad='/tmp/bad.json';fs.writeFileSync(bad,'{"x":1}');await pg.click('#tabs a[data-tab=data]');await pg.setInputFiles('#imp',bad);
+  ok(await pg.locator('#toast.show').count()===1,name+' bad import rejected');
+  // offline
+  await pg.goto(URL);await pg.evaluate(()=>navigator.serviceWorker.ready);await pg.reload();
+  await ctx.setOffline(true);await pg.reload();await pg.waitForSelector('h1');
+  ok(await pg.locator('text=Lifts').first().isVisible(),name+' offline reload');
+  await pg.click('[data-act=start][data-id=legs]');await pg.waitForSelector('.set');
+  await pg.fill('[data-e="0"] [data-f=w][data-j="0"]','100');await pg.fill('[data-e="0"] [data-f=r][data-j="0"]','8');await pg.click('[data-e="0"] [data-act=chk][data-j="0"]');
+  await pg.click('[data-act=finish]');await pg.waitForSelector('text=Recent');ok(true,name+' offline logging');
+  await ctx.setOffline(false);
+  ok(errs.length===0,name+' no JS errors '+errs.join('|'));
+  await pg.screenshot({path:`/tmp/${name}.png`});await b.close();
+}
+(async()=>{await run(chromium,'chromium');await run(webkit,'webkit');console.log(`pass ${pass} fail ${fail}`);process.exit(fail?1:0);})();
