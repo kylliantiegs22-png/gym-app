@@ -28,6 +28,8 @@ for(const scheme of ['light','dark']){
   await nav(pg,'progress');await pg.waitForSelector('#prsel');await shot('progress');
   await nav(pg,'routines');await shot('routines');
   await pg.click('[data-act=goto][data-to="#/editor/push"]');await shot('editor');
+  await nav(pg,'exercises');await pg.waitForSelector('.exrow');await shot('exercises');
+  await pg.click('.exrow');await pg.waitForSelector('svg.figure');await shot('exercise-detail');
   await nav(pg,'data');await shot('data');
   await nav(pg,'progress');await pg.evaluate(()=>{localStorage.clear()});await pg.reload();await shot('progress-empty');
   console.log(scheme,'console/page errors:',errs.length?errs:'none');if(errs.length)hard++;

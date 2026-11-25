@@ -121,3 +121,9 @@ Evidence: `round-2/`. Run twice with identical results.
 - **Progress is one lift at a time**; a single-session lift shows a number, not a trend, until it's logged twice.
 - **Rest timer is a count-up**, not a target countdown with an alert.
 - **Suggestion logic is simple** (all sets at 12 reps → heavier); it doesn't know about RPE, failed reps, or deloads beyond the 4-week rule.
+
+---
+
+## Changes since round 2 (not a scored round)
+
+Redesigned flat/ruled look with a side panel; wider button spacing; a 110-exercise library with muscle diagrams. These were verified by the unit, end-to-end (28 checks), resilience, sweep and persona suites, but persona scores have not been re-scored for them.

@@ -1,6 +1,6 @@
 /* Lifts: flat, ruled, square-cornered. No cards, no shadows, no gradients. */
-:root{--bg:#fff;--ink:#1a0a0d;--mute:#76575d;--line:#e3d2d5;--accent:#c8102e;--accent-ink:#fff;--accent-text:#a50d26;--maroon:#5a0b16;--maroon-ink:#fff;--tint:#faeaec;--warn:#a50d26;--card:#fff}
-@media(prefers-color-scheme:dark){:root{--bg:#150709;--ink:#f6eaec;--mute:#b99ea3;--line:#40202a;--accent:#ff5c70;--accent-ink:#1a070b;--accent-text:#ff8392;--maroon:#5a0b16;--tint:#2b1217;--warn:#ff8392;--card:#150709}}
+:root{--bg:#fff;--ink:#1a0a0d;--mute:#76575d;--line:#e3d2d5;--accent:#c8102e;--accent-ink:#fff;--accent-text:#a50d26;--maroon:#5a0b16;--maroon-ink:#fff;--tint:#faeaec;--warn:#a50d26;--card:#fff;--body:#e1d3d6}
+@media(prefers-color-scheme:dark){:root{--bg:#150709;--ink:#f6eaec;--mute:#b99ea3;--line:#40202a;--accent:#ff5c70;--accent-ink:#1a070b;--accent-text:#ff8392;--maroon:#5a0b16;--tint:#2b1217;--warn:#ff8392;--card:#150709;--body:#3d2a30}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;border-radius:0}
 html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 "Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;font-variant-numeric:tabular-nums}
 body.open{overflow:hidden}
@@ -35,12 +35,12 @@ body.open #tabs{transform:none;visibility:visible}
 /* rows instead of cards */
 .card{background:transparent;border:0;border-top:1px solid var(--line);padding:16px 0;margin:0}
 .card:first-of-type{border-top:0}
-.row{display:flex;align-items:center;gap:8px}.grow{flex:1;min-width:0}.between{justify-content:space-between}.row.end{justify-content:flex-end}
+.row{display:flex;align-items:center;gap:12px}.grow{flex:1;min-width:0}.between{justify-content:space-between}.row.end{justify-content:flex-end}
 .rows{counter-reset:r}
 .rrow{counter-increment:r;display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--line)}
 .rrow::before{content:counter(r,decimal-leading-zero);font-size:34px;font-weight:900;color:transparent;-webkit-text-stroke:1.5px var(--accent);min-width:56px;letter-spacing:-.02em}
 .rrow b{font-size:22px;text-transform:uppercase;letter-spacing:.01em}
-.logrow{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--line)}
+.logrow{display:flex;align-items:center;gap:12px;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--line)}
 .logrow b{text-transform:uppercase;letter-spacing:.02em}
 .block{padding:16px 18px;margin:14px 0;background:var(--maroon);color:#fff}.block .mute{color:#f3c3cb}
 .block button.primary{background:#fff;color:var(--maroon);border-color:#fff}
@@ -59,7 +59,7 @@ input:focus{border-bottom-color:var(--accent)}
 select{font-size:18px;text-transform:uppercase;letter-spacing:.03em}
 input[type=file]{font-size:14px;border:2px dashed var(--line);padding:12px}
 /* sets */
-.set{display:grid;grid-template-columns:30px 1fr 1fr 48px;gap:14px;align-items:center;margin:2px 0}
+.set{display:grid;grid-template-columns:30px 1fr 1fr 48px;gap:16px;align-items:center;margin:10px 0}
 .set .n{color:var(--mute);font-weight:800;font-size:15px}
 .set input{text-align:center}
 .set.done input{border-bottom-color:var(--accent);color:var(--accent-text)}
@@ -79,3 +79,40 @@ svg.chart{width:100%;height:180px}
 #toast.show{visibility:visible}
 #rest{position:fixed;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:space-between;background:var(--accent);color:var(--accent-ink);padding:0 6px 0 18px;padding-bottom:env(safe-area-inset-bottom);min-height:52px;font-weight:900;font-size:18px;letter-spacing:.08em;text-transform:uppercase;z-index:10}
 #rest[hidden]{display:none}#rest button{background:transparent;border:0;color:inherit;font-size:18px}
+
+/* breathing room between controls */
+.setctl{margin-top:22px;margin-bottom:6px;gap:14px}
+.card .row.end{gap:12px}
+.card+.card,.card{padding:20px 0}
+.logrow .row{gap:12px}
+.block .row{gap:14px}
+.row+.row{margin-top:14px}
+button+button{margin-left:0}
+/* exercise library */
+.chips{display:flex;gap:10px;overflow-x:auto;padding:14px 0 12px;margin:0 -18px;padding-left:18px;padding-right:18px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;padding:8px 16px;font-size:12px}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+#exequip{margin:4px 0 8px}
+input[type=search]{-webkit-appearance:none;appearance:none}
+.exrow{display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--line);color:var(--ink);text-decoration:none;min-height:64px}
+.exrow .grow{display:flex;flex-direction:column;gap:2px}
+.exrow .sub{font-size:13px}
+.chev{font-size:28px;color:var(--mute);padding:0 4px}
+.mini{flex:none;width:86px}
+.count{padding:16px 0 0;text-align:center;font-size:13px}
+.back{display:inline-block;padding:10px 0;margin-bottom:6px;color:var(--accent-text);font-weight:800;text-transform:uppercase;letter-spacing:.12em;font-size:13px;text-decoration:none;min-height:44px;line-height:24px}
+.line{margin:6px 0;line-height:1.5}
+.line b{display:inline-block;min-width:92px;text-transform:uppercase;letter-spacing:.1em;font-size:12px;color:var(--mute)}
+/* muscle figure */
+.fig{margin:10px 0 6px;max-width:420px}
+svg.figure{width:100%;height:auto;display:block}
+svg.figure .base{fill:var(--body)}
+svg.figure .m{fill:var(--body);stroke:var(--bg);stroke-width:1.4;stroke-linejoin:round}
+svg.figure .m.p{fill:var(--accent)}
+svg.figure .m.s{fill:var(--accent);fill-opacity:.4}
+svg.figure .figlabel{font:800 12px "Helvetica Neue",Arial,sans-serif;letter-spacing:.2em;fill:var(--mute)}
+.legend{display:flex;gap:22px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:var(--mute);margin:4px 0}
+.legend span{display:flex;align-items:center;gap:8px}
+.sw{display:inline-block;width:16px;height:16px;background:var(--body)}
+.sw.p{background:var(--accent)}.sw.s{background:var(--accent);opacity:.4}

@@ -22,3 +22,14 @@ console.log('unit ok');
  s=L.suggest(mk2('bench','2026-11-18',[[100,12],[100,12],[100,12]]),ex('bench'),8,12,3,'2026-11-25');assert(s.nudge,'nudge within a week');
  s=L.suggest(mk2('plank','2026-11-18',[[0,45],[0,45],[0,45]]),ex('plank'),8,12,3,'2026-11-25');assert(!s.nudge,'never nudge a plank');assert.equal(s.sets[0].r,45);
  assert.equal(L.daysBetween('2026-11-18','2026-11-25'),7);console.log('gap/timed ok');}
+{const D=require('../data.js'),F=require('../figure.js');
+ assert(D.BUILTIN.length>=100,'library size');assert.equal(new Set(D.BUILTIN.map(e=>e.id)).size,D.BUILTIN.length,'unique ids');
+ const drawn=new Set([...Object.keys(F.SHAPES.front),...Object.keys(F.SHAPES.back)]);
+ for(const e of D.BUILTIN){assert(e.primary.length,e.id+' has no primary muscle');assert(e.cue,e.id+' has no cue');
+  for(const k of [...e.primary,...e.secondary]){assert(F.MUSCLE_NAME[k],e.id+' unknown muscle '+k);assert(drawn.has(k),e.id+' muscle '+k+' has no drawing');}
+  assert(['barbell','dumbbell','machine','cable','bodyweight'].includes(e.equip),e.id+' equipment');}
+ for(const r of Object.values(D.DEFAULT_ROUTINES))for(const id of r.ex)assert(D.BUILTIN.find(e=>e.id===id),'routine exercise '+id);
+ const svg=F.figure(D.BUILTIN.find(e=>e.id==='bench'),{labels:true});
+ assert(/class="m p"/.test(svg)&&/class="m s"/.test(svg),'primary and secondary drawn');assert(/Primary: Chest\. Secondary: Triceps, Shoulders\./.test(svg));
+ assert.deepEqual(F.musclesOf({muscle:'Legs'}).primary,['quads','glutes','hamstrings']);assert.deepEqual(F.musclesOf({muscle:'Custom'}).primary,[]);
+ console.log('library ok ('+D.BUILTIN.length+' exercises)');}

@@ -39,6 +39,18 @@ async function run(type,name){
   await nav(pg,'routines');await pg.fill('#cxname','Sled Push');await pg.click('[data-act=addcustom]');
   await pg.click('[data-act=goto][data-to="#/editor/push"]');await pg.fill('#edq','Sled');await pg.click('[data-act=pick]');
   ok(await pg.locator('text=Sled Push').count()>=1,name+' custom exercise');
+  // exercise library: search, filter, muscle diagram, add to routine
+  await nav(pg,'exercises');await pg.waitForSelector('.exrow');
+  const total=await pg.locator('.exrow').count();ok(total>=100,name+' library lists 100+ exercises ('+total+')');
+  await pg.fill('#exq','squat');await pg.waitForTimeout(100);const sq=await pg.locator('.exrow').count();ok(sq>=3&&sq<total,name+' search narrows ('+sq+')');
+  await pg.fill('#exq','');await pg.click('[data-act=exgroup][data-g=Calves]');ok(await pg.locator('.exrow').count()===4,name+' Calves filter = 4');
+  await pg.click('[data-act=exgroup][data-g=All]');await pg.selectOption('#exequip','cable');ok((await pg.locator('.exrow').count())<total,name+' equipment filter');
+  await pg.selectOption('#exequip','all');await pg.fill('#exq','Barbell Bench');await pg.click('.exrow');await pg.waitForSelector('svg.figure');
+  ok(await pg.locator('svg.figure .m.p').count()>=2,name+' primary muscle highlighted (chest, both sides)');
+  ok(await pg.locator('svg.figure .m.s').count()>=4,name+' secondary muscles highlighted');
+  ok(/Primary: Chest/.test(await pg.locator('svg.figure').getAttribute('aria-label')),name+' diagram has a text alternative');
+  await pg.selectOption('#addr','pull');await pg.click('[data-act=addtoroutine]');await pg.waitForSelector('#toast.show');
+  await nav(pg,'routines');await pg.click('[data-act=goto][data-to="#/editor/pull"]');await pg.waitForSelector('[data-act=rm]');ok(await pg.locator('text=Barbell Bench Press').count()>=1,name+' added to routine from library');
   // progress
   await nav(pg,'progress');await pg.waitForSelector('#prsel');
   ok(await pg.locator('text=Top weight 60 kg').count()===1,name+' progress best');

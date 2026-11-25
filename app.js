@@ -56,8 +56,8 @@ function drawer(){
 }
 function draw(){
   const h=(location.hash||'#/').slice(2); const [page,arg]=h.split('/');
-  document.querySelectorAll('#tabs a').forEach(a=>a.classList.toggle('on',a.dataset.tab===(page||'home')||(page==='workout'&&a.dataset.tab==='home')||(page==='editor'&&a.dataset.tab==='routines')));
-  ({'':home,home,workout,routines:routinesPage,editor,progress,data:dataPage}[page]||home)(arg);
+  document.querySelectorAll('#tabs a').forEach(a=>a.classList.toggle('on',a.dataset.tab===(page||'home')||(page==='workout'&&a.dataset.tab==='home')||(page==='editor'&&a.dataset.tab==='routines')||(page==='exercise'&&a.dataset.tab==='exercises')));
+  ({'':home,home,workout,routines:routinesPage,editor,progress,data:dataPage,exercises,exercise}[page]||home)(arg);
   window.scrollTo(0,0);
 }
 window.addEventListener('hashchange',route);
@@ -99,7 +99,7 @@ function workout(){
     <input type="text" inputmode="decimal" autocomplete="off" placeholder="${wph}" aria-label="Set ${j+1} weight" value="${esc(s.w)}" data-f="w" data-i="${i}" data-j="${j}">
     <input type="text" inputmode="${ex.timed?'numeric':'numeric'}" autocomplete="off" placeholder="${ex.timed?'sec':'reps'}" aria-label="Set ${j+1} ${ex.timed?'seconds':'reps'}" value="${esc(s.r)}" data-f="r" data-i="${i}" data-j="${j}">
     <button class="chk ${s.done?'on':''}" aria-label="Set ${j+1} done" aria-pressed="${!!s.done}" data-act="chk" data-i="${i}" data-j="${j}">✓</button></div>`).join('')}
-   <div class="row"><button class="small" data-act="addset" data-i="${i}">+ Set</button><button class="small" data-act="rmset" data-i="${i}" ${e.sets.length<=1?'disabled':''}>− Set</button></div></div>`}).join('')}
+   <div class="row setctl"><button class="small" data-act="addset" data-i="${i}">+ Set</button><button class="small" data-act="rmset" data-i="${i}" ${e.sets.length<=1?'disabled':''}>− Set</button></div></div>`}).join('')}
   ${wkPick?`<h2>${wkPick.mode==='swap'?'Swap with…':'Add exercise'}</h2><input id="wkq" placeholder="Search name or muscle" value="${esc(wkQuery)}" aria-label="Search exercises"><div class="list">${matches.map(e=>`<button data-act="wkpick" data-ex="${e.id}">${esc(e.name)} <span class="tag">${esc(e.muscle)}</span></button>`).join('')||'<p class="mute">No matches.</p>'}</div><button data-act="wkcancel">Cancel</button>`
    :d.editId?'':`<button data-act="addwk">+ Add exercise</button>`}
   <div class="row" style="margin-top:12px"><button class="primary grow" data-act="finish">${d.editId?'Save changes':'Finish workout'}</button><button class="danger" data-act="discard">${d.editId?'Cancel':'Discard'}</button></div>`;
@@ -131,7 +131,7 @@ function routinesPage(){
   $app.innerHTML=`<h1>Routines</h1>${Object.entries(p.routines).map(([id,r])=>`<div class="card row between"><div><b>${esc(r.name)}</b><div class="mute">${r.ex.length} exercises</div></div><button data-act="goto" data-to="#/editor/${id}">Edit</button></div>`).join('')}
   <button data-act="newroutine">+ New routine</button>
   <h2>Custom exercise</h2><div class="card"><input id="cxname" placeholder="Name" maxlength="40" aria-label="Exercise name">
-  <div class="row" style="margin-top:8px"><select id="cxequip" aria-label="Equipment">${Object.keys(EQUIP_STEP).map(k=>`<option>${k}</option>`).join('')}</select><button data-act="addcustom">Add</button></div></div>`;
+  <div class="row" style="margin-top:10px"><select id="cxequip" aria-label="Equipment">${Object.keys(EQUIP_STEP).map(k=>`<option>${k}</option>`).join('')}</select><select id="cxgroup" aria-label="Muscle group">${GROUPS.map(g=>`<option>${g}</option>`).join('')}</select></div><div style="margin-top:10px"><button data-act="addcustom">Add exercise</button></div></div>`;
 }
 let edQuery='',edSwap=null;
 function editor(id){
@@ -145,6 +145,41 @@ function editor(id){
   <h2>${edSwap!==null?'Swap with…':'Add exercise'}</h2><input id="edq" placeholder="Search name or muscle" value="${esc(edQuery)}" aria-label="Search exercises">
   <div class="list">${matches.map(e=>`<button data-act="pick" data-id="${id}" data-ex="${e.id}">${esc(e.name)} <span class="tag">${esc(e.muscle)}</span></button>`).join('')||'<p class="mute">No matches.</p>'}</div>
   <div class="row" style="margin-top:16px"><button class="danger" data-act="delroutine" data-id="${id}">Delete routine</button><button class="grow" data-act="goto" data-to="#/routines">Done</button></div>`;
+}
+
+// ---------- exercise library ----------
+const GROUPS=['Chest','Back','Shoulders','Biceps','Triceps','Forearms','Legs','Calves','Core','Full body'];
+let exQ='',exG='All',exE='all';
+function exMatches(){
+  const q=exQ.trim().toLowerCase();
+  return allEx().filter(e=>(exG==='All'||e.muscle===exG)&&(exE==='all'||e.equip===exE)&&(!q||e.name.toLowerCase().includes(q)||e.muscle.toLowerCase().includes(q)||muscleNames(musclesOf(e).primary.concat(musclesOf(e).secondary)).toLowerCase().includes(q)));
+}
+function exListHTML(){
+  const list=exMatches();
+  return (list.map(e=>`<a class="exrow" href="#/exercise/${esc(e.id)}"><span class="mini">${figure(e,{mini:true})}</span><span class="grow"><span class="exname">${esc(e.name)}</span><span class="mute sub">${esc(e.muscle)} · ${e.equip}</span></span><span class="chev" aria-hidden="true">›</span></a>`).join('')||'<p class="mute">No matches. Try another word or filter.</p>')+`<div class="mute count">${list.length} of ${allEx().length}</div>`;
+}
+function exercises(){
+  $app.innerHTML=`<div class="kicker">Library</div><h1>Exercises</h1>
+  <input id="exq" type="search" placeholder="Search name or muscle" value="${esc(exQ)}" aria-label="Search exercises" autocomplete="off">
+  <div class="chips" role="group" aria-label="Muscle group">${['All',...GROUPS].map(g=>`<button class="chip ${g===exG?'on':''}" data-act="exgroup" data-g="${g}" aria-pressed="${g===exG}">${g}</button>`).join('')}</div>
+  <select id="exequip" aria-label="Equipment"><option value="all">All equipment</option>${Object.keys(EQUIP_STEP).map(k=>`<option value="${k}" ${k===exE?'selected':''}>${k}</option>`).join('')}</select>
+  <div id="exlist">${exListHTML()}</div>
+  <div style="margin-top:22px"><button data-act="goto" data-to="#/routines">+ Custom exercise</button></div>`;
+}
+function exercise(id){
+  const ex=allEx().find(e=>e.id===id); if(!ex){location.hash='#/exercises';return;}
+  const m=musclesOf(ex),p=P();
+  const hist=bestByDate(p.logs,ex.id),best=hist.length?Math.max(...hist.map(x=>x.top)):0;
+  const load=ex.timed?'Logged in seconds. Add weight only if you use some.':ex.equip==='bodyweight'?'Bodyweight. Enter a weight only when you add some.':'Goes up in '+STEP_LABEL[ex.equip]+' steps.';
+  $app.innerHTML=`<a class="back" href="#/exercises">‹ Exercises</a><div class="kicker">${esc(ex.muscle)} · ${ex.equip}</div><h1>${esc(ex.name)}</h1>
+  <div class="fig">${figure(ex,{labels:true})}</div>
+  <div class="legend"><span><i class="sw p"></i>Primary</span><span><i class="sw s"></i>Secondary</span></div>
+  <h2>Muscles worked</h2>
+  <p class="line"><b>Primary</b> ${esc(muscleNames(m.primary)||'Not listed')}</p>
+  <p class="line"><b>Secondary</b> ${esc(muscleNames(m.secondary)||'None')}</p>
+  ${ex.cue?`<h2>How</h2><p class="line">${esc(ex.cue)}</p>`:''}
+  <h2>Loading</h2><p class="line">${esc(load)}</p>${best?`<p class="line"><b>Your best</b> ${best} kg</p>`:''}
+  <h2>Add to a routine</h2><div class="row"><select id="addr" aria-label="Routine">${Object.entries(p.routines).map(([rid,r])=>`<option value="${esc(rid)}">${esc(r.name)}</option>`).join('')}</select><button class="primary" data-act="addtoroutine" data-ex="${esc(ex.id)}">Add</button></div>`;
 }
 
 // ---------- progress ----------
@@ -219,6 +254,8 @@ document.addEventListener('click',ev=>{
     case 'wkpick': {const d=p.draft,ex=exById(b.dataset.ex),s=suggest(p.logs,ex,REP_MIN,REP_MAX,DEFAULT_SETS,today()),ne={exId:ex.id,nudge:s.nudge,sets:s.sets};
       if(wkPick&&wkPick.mode==='swap'){const old=d.entries[wkPick.i]; if(old&&old.sets.some(x=>x.done)&&!confirm('This exercise has ticked sets. Replace it and lose them?')) break; d.entries[wkPick.i]=ne;} else d.entries.push(ne);
       wkPick=null; wkQuery=''; save(); workout(); break;}
+    case 'exgroup': exG=b.dataset.g; exercises(); break;
+    case 'addtoroutine': {const rid=document.getElementById('addr').value,r=p.routines[rid]; if(!r) break; if(r.ex.includes(b.dataset.ex)){toast('Already in '+r.name);break;} r.ex.push(b.dataset.ex); save(); toast('Added to '+r.name); break;}
     case 'restclear': restStart=0; updateRest(); break;
     case 'addset': {const e=p.draft.entries[i]; const l=e.sets[e.sets.length-1]; e.sets.push({w:l?l.w:'',r:l?l.r:'',done:false}); save(); workout(); break;}
     case 'rmset': {const e=p.draft.entries[i]; if(e.sets.length>1){e.sets.pop(); save(); workout();} break;}
@@ -230,7 +267,7 @@ document.addEventListener('click',ev=>{
     case 'swap': edSwap=edSwap===i?null:i; editor(id); break;
     case 'pick': {const r=p.routines[id].ex; if(edSwap!==null){r[edSwap]=b.dataset.ex; edSwap=null;} else if(!r.includes(b.dataset.ex)) r.push(b.dataset.ex); else {toast('Already in routine');break;} save(); editor(id); break;}
     case 'delroutine': if(Object.keys(p.routines).length<=1){toast('Keep at least one routine');break;} if(confirm('Delete this routine? Past workouts are kept.')){delete p.routines[id]; save(); location.hash='#/routines';} break;
-    case 'addcustom': {const n=document.getElementById('cxname').value.trim(); if(!n){toast('Enter a name');break;} const eq=document.getElementById('cxequip').value; p.customEx.push({id:'c'+uid(),name:n.slice(0,40),equip:eq,muscle:'Custom'}); save(); toast('Added — find it in the editor'); document.getElementById('cxname').value=''; break;}
+    case 'addcustom': {const n=document.getElementById('cxname').value.trim(); if(!n){toast('Enter a name');break;} const eq=document.getElementById('cxequip').value; p.customEx.push({id:'c'+uid(),name:n.slice(0,40),equip:eq,muscle:(document.getElementById('cxgroup')||{}).value||'Custom'}); save(); toast('Added — find it in the editor'); document.getElementById('cxname').value=''; break;}
     case 'export': doExport(); break;
     case 'erase': if(confirm('Erase ALL data on this phone?')&&confirm('This cannot be undone. Really erase?')){S=fresh(); save(); location.hash='#/'; route();} break;
   }
@@ -241,10 +278,12 @@ document.addEventListener('input',ev=>{
   if(t.dataset&&t.dataset.f){const s=P().draft.entries[+t.dataset.i].sets[+t.dataset.j];
     const clean=t.value.replace(/[^0-9.,]/g,''); if(clean!==t.value) t.value=clean;
     const n=Number(clean.replace(',','.')); s[t.dataset.f]=clean===''||!isFinite(n)?'':n; s.t=true; save();}
+  else if(t.id==='exq'){exQ=t.value; document.getElementById('exlist').innerHTML=exListHTML();}
   else if(t.id==='wkq'){wkQuery=t.value; const pos=t.selectionStart; workout(); const n=document.getElementById('wkq'); n.focus(); n.setSelectionRange(pos,pos);}
   else if(t.id==='edq'){edQuery=t.value; const pos=t.selectionStart; editor(location.hash.split('/')[2]); const n=document.getElementById('edq'); n.focus(); n.setSelectionRange(pos,pos);}
 });
 document.addEventListener('change',ev=>{
+  if(ev.target.id==='exequip'){exE=ev.target.value; exercises();}
   if(ev.target.id==='prsel'){prEx=ev.target.value; progress();}
   if(ev.target.id==='imp'&&ev.target.files[0]) doImport(ev.target.files[0]);
 });

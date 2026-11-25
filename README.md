@@ -2,7 +2,8 @@
 
 An offline gym tracker for two people. No account, no server: everything is stored on the phone. Installable on an iPhone home screen.
 
-- 77 exercises, 4 starter routines (Push, Pull, Legs, Full Body), editable, with custom exercises
+- Exercise library: 110 standard exercises you can search and filter by muscle group or equipment. Each has a front/back muscle diagram (primary and secondary muscles), a one-line how-to, and an "Add to routine" button
+- 4 starter routines (Push, Pull, Legs, Full Body), editable, plus your own custom exercises
 - Weight and reps carry down from the last session; "Go heavier" nudge when every set hit 12 reps (+2.5 kg barbell, +2 kg dumbbell, +5 kg machine/cable)
 - Rest timer, screen stays awake, mid-workout swap/add, edit past workouts, PR callout, welcome-back after a long break
 - Progress chart (top weight, estimated 1RM), export/restore backup, light and dark mode
