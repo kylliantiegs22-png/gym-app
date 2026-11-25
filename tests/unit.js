@@ -24,7 +24,7 @@ console.log('unit ok');
  assert.equal(L.daysBetween('2026-11-18','2026-11-25'),7);console.log('gap/timed ok');}
 {const D=require('../data.js'),F=require('../figure.js');
  assert(D.BUILTIN.length>=100,'library size');assert.equal(new Set(D.BUILTIN.map(e=>e.id)).size,D.BUILTIN.length,'unique ids');
- const drawn=new Set([...Object.keys(F.SHAPES.front),...Object.keys(F.SHAPES.back)]);
+ const drawn=new Set(Object.values(F.ART_KEY));const ART=require('../body-art.js').BODY_ART;for(const k of Object.keys(F.ART_KEY))assert(ART.front.concat(ART.back).some(a=>a[0]===k),'artwork piece '+k+' exists');
  for(const e of D.BUILTIN){assert(e.primary.length,e.id+' has no primary muscle');assert(e.cue,e.id+' has no cue');
   for(const k of [...e.primary,...e.secondary]){assert(F.MUSCLE_NAME[k],e.id+' unknown muscle '+k);assert(drawn.has(k),e.id+' muscle '+k+' has no drawing');}
   assert(['barbell','dumbbell','machine','cable','bodyweight'].includes(e.equip),e.id+' equipment');}

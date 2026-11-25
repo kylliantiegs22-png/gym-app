@@ -27,6 +27,9 @@ Pick "Me" or "Partner" on the Home screen; each has separate data. Use **Data â†
     node tests/persona.js 3       # gym-goer playtests -> docs/persona-evidence/round-3
 See `docs/persona-review.md`.
 
+## Credits
+Muscle diagram artwork is from [react-body-highlighter](https://github.com/GV79/react-body-highlighter) (MIT, Â© 2020 GV79). See `THIRD-PARTY-NOTICES.md`.
+
 ## Develop
     node serve.js 8080                       # local server
     node tests/unit.js                       # logic tests

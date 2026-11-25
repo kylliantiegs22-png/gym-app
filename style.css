@@ -99,16 +99,17 @@ input[type=search]{-webkit-appearance:none;appearance:none}
 .exrow .grow{display:flex;flex-direction:column;gap:2px}
 .exrow .sub{font-size:13px}
 .chev{font-size:28px;color:var(--mute);padding:0 4px}
-.mini{flex:none;width:86px}
+.mini{flex:none;width:84px}
 .count{padding:16px 0 0;text-align:center;font-size:13px}
 .back{display:inline-block;padding:10px 0;margin-bottom:6px;color:var(--accent-text);font-weight:800;text-transform:uppercase;letter-spacing:.12em;font-size:13px;text-decoration:none;min-height:44px;line-height:24px}
 .line{margin:6px 0;line-height:1.5}
 .line b{display:inline-block;min-width:92px;text-transform:uppercase;letter-spacing:.1em;font-size:12px;color:var(--mute)}
 /* muscle figure */
-.fig{margin:10px 0 6px;max-width:420px}
+.fig{margin:10px 0 6px;max-width:400px}
 svg.figure{width:100%;height:auto;display:block}
 svg.figure .base{fill:var(--body)}
-svg.figure .m{fill:var(--body);stroke:var(--bg);stroke-width:1.4;stroke-linejoin:round}
+svg.figure .m,svg.figure .base{stroke:var(--bg);stroke-width:.35;stroke-linejoin:round}
+svg.figure .m{fill:var(--body)}
 svg.figure .m.p{fill:var(--accent)}
 svg.figure .m.s{fill:var(--accent);fill-opacity:.4}
 svg.figure .figlabel{font:800 12px "Helvetica Neue",Arial,sans-serif;letter-spacing:.2em;fill:var(--mute)}
