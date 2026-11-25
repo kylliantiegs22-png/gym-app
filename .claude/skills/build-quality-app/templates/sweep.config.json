@@ -1,0 +1,16 @@
+{
+  "baseURL": "http://localhost:4173",
+  "viewport": { "width": 390, "height": 844 },
+  "themes": ["light", "dark"],
+  "outDir": "screenshots/sweep",
+  "minTarget": 44,
+  "minFont": 12,
+  "emoji": "fail",
+  "reducedMotion": false,
+  "ignoreTargets": [],
+  "seed": {},
+  "screens": [
+    { "name": "home", "path": "/", "waitFor": "main" },
+    { "name": "detail", "path": "/#/detail/1", "waitFor": "main", "seed": { "app.v1": { "example": "saved state for this screen" } }, "actions": [ { "click": "button.primary" }, { "wait": 300 } ], "fullPage": false }
+  ]
+}

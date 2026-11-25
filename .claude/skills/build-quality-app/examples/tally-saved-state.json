@@ -1,0 +1,17 @@
+{
+  "v": 1,
+  "onboarded": true,
+  "profile": { "goal": "debt", "level": "new", "cue": "my morning coffee", "time": "08:00", "dailyGoal": 60 },
+  "settings": { "theme": "system", "sound": false, "haptics": false, "motion": "system" },
+  "xp": 240,
+  "days": { "2026-11-23": { "xp": 120, "lessons": 2, "reviews": 0, "sessions": 2, "seconds": 600 } },
+  "completed": {
+    "1.1": { "at": "2026-11-23T08:00:00.000Z", "score": 90, "best": 90, "runs": 1 },
+    "1.2": { "at": "2026-11-23T08:10:00.000Z", "score": 100, "best": 100, "runs": 1 }
+  },
+  "passedUnits": [],
+  "streak": { "current": 1, "longest": 1, "lastDay": "2026-11-23", "freezes": 0, "frozenDays": [], "repairedDays": [], "repair": null, "sessions": { "2026-11-23": 2 } },
+  "cards": { "net-worth": { "concept": "net-worth", "lesson": "1.2", "box": 1, "due": "2026-11-24", "lapses": 0, "seen": 0 } },
+  "missions": {},
+  "celebrated": []
+}

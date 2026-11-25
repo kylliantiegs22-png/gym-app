@@ -1,0 +1,47 @@
+{
+  "emma": {
+    "name": "Emma", "age": 16, "theme": "light",
+    "life": "Year 11, $40 a week pocket money plus about $90 a fortnight from a weekend cafe job",
+    "goal": "pay", "level": "new", "daily": "5 min", "cue": "I get home from school", "time": "16:30", "download_ics": true,
+    "first_question_correct": false,
+    "days": [0, 1, 2, 3, 4], "per_day": 2,
+    "err_every": 4, "err_offset": 1, "sure_on_numeric": false,
+    "mid_lesson_leave": false, "offline_day": null, "plan_missions": true
+  },
+  "jake": {
+    "name": "Jake", "age": 20, "theme": "light",
+    "life": "Second-year uni student, shares a Brisbane house at $240 a week, casual hospitality shifts, HECS-HELP",
+    "goal": "pay", "level": "basics", "daily": "10 min", "cue": "I finish my first lecture", "time": "10:15", "download_ics": true,
+    "first_question_correct": true,
+    "days": [0, 1, 3, 4, 5], "per_day": 2,
+    "err_every": 6, "err_offset": 3, "sure_on_numeric": true,
+    "mid_lesson_leave": false, "offline_day": 3, "plan_missions": true
+  },
+  "olivia": {
+    "name": "Olivia", "age": 24, "theme": "dark",
+    "life": "Graduate nurse on rotating shifts, $72,000 salary, renting in Brisbane",
+    "goal": "pay", "level": "new", "daily": "10 min", "cue": "I get into bed after a late shift", "time": "22:00", "download_ics": false,
+    "first_question_correct": true,
+    "days": [0, 1, 2, 4, 5], "per_day": 2,
+    "err_every": 7, "err_offset": 2, "sure_on_numeric": true,
+    "mid_lesson_leave": true, "offline_day": null, "plan_missions": true
+  },
+  "liam": {
+    "name": "Liam", "age": 28, "theme": "light",
+    "life": "Software tester on $95,000, $18,000 saved, $9,000 car loan, wants a first home in 3 years",
+    "goal": "invest", "level": "basics", "daily": "15 min", "cue": "I sit down on the train", "time": "07:40", "download_ics": true,
+    "first_question_correct": true,
+    "days": [0, 1, 2, 3, 4], "per_day": 3,
+    "err_every": 8, "err_offset": 5, "sure_on_numeric": true,
+    "mid_lesson_leave": false, "offline_day": 1, "plan_missions": true
+  },
+  "sarah": {
+    "name": "Sarah", "age": 35, "theme": "light",
+    "life": "Single parent of two (6 and 9), $62,000 part-time admin job plus child support, rent $2,000 a month, $2,400 credit card debt",
+    "goal": "debt", "level": "new", "daily": "5 min", "cue": "the kids are in bed", "time": "20:30", "download_ics": true,
+    "first_question_correct": false,
+    "days": [0, 2, 3, 5, 6], "per_day": 2,
+    "err_every": 5, "err_offset": 0, "sure_on_numeric": false,
+    "mid_lesson_leave": true, "offline_day": null, "plan_missions": true
+  }
+}
