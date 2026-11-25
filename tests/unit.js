@@ -16,3 +16,9 @@ console.log('unit ok');
  assert.equal(s.active,'a');assert.equal(s.profiles.a.logs.length,1);assert.equal(s.profiles.a.logs[0].entries[0].sets.length,1);
  assert(Object.keys(s.profiles.a.routines).length===4);assert.equal(s.profiles.a.draft,null);assert.equal(s.profiles.a.name,'Person 1');
  console.log('sanitize ok');}
+{const ex=id=>BUILTIN.find(e=>e.id===id);
+ const mk2=(id,date,sets)=>[{date,entries:[{exId:id,sets:sets.map(([w,r])=>({w,r,done:true}))}]}];
+ let s=L.suggest(mk2('bench','2026-10-01',[[100,12],[100,12],[100,12]]),ex('bench'),8,12,3,'2026-11-25');assert(!s.nudge,'no nudge after 8 weeks');assert.equal(s.sets[0].w,100);
+ s=L.suggest(mk2('bench','2026-11-18',[[100,12],[100,12],[100,12]]),ex('bench'),8,12,3,'2026-11-25');assert(s.nudge,'nudge within a week');
+ s=L.suggest(mk2('plank','2026-11-18',[[0,45],[0,45],[0,45]]),ex('plank'),8,12,3,'2026-11-25');assert(!s.nudge,'never nudge a plank');assert.equal(s.sets[0].r,45);
+ assert.equal(L.daysBetween('2026-11-18','2026-11-25'),7);console.log('gap/timed ok');}

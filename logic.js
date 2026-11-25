@@ -9,10 +9,13 @@ function lastSession(logs, exId){
 }
 // Suggest starting sets for an exercise. Carry weight/reps down from last time;
 // nudge heavier if every set hit the top of the rep range.
-function suggest(logs, ex, repMin, repMax, nSets){
+function daysBetween(a,b){ return Math.round((Date.parse(b+'T00:00:00Z')-Date.parse(a+'T00:00:00Z'))/864e5); }
+function suggest(logs, ex, repMin, repMax, nSets, todayISO){
   const last = lastSession(logs, ex.id);
   if(!last) return {nudge:false, sets:Array.from({length:nSets},()=>({w:'',r:'',done:false}))};
-  const allTop = last.sets.length>=nSets && last.sets.every(s=>+s.r>=repMax);
+  const gapDays = todayISO ? daysBetween(last.date, todayISO) : 0;
+  // never push the weight up for timed holds, or after a long break (ease back in)
+  const allTop = !ex.timed && gapDays<=28 && last.sets.length>=nSets && last.sets.every(s=>+s.r>=repMax);
   const step = stepFor(ex);
   const base = last.sets.map(s=>+s.w);
   const top = Math.max(...base);
@@ -21,7 +24,7 @@ function suggest(logs, ex, repMin, repMax, nSets){
     const prev = last.sets[Math.min(i,last.sets.length-1)];
     sets.push({w: allTop ? round(+prev.w+step) : +prev.w, r: allTop ? repMin : +prev.r, done:false});
   }
-  return {nudge:allTop, step, sets, last};
+  return {nudge:allTop, step, sets, last, gapDays};
 }
 function round(n){ return Math.round(n*100)/100; }
 function e1rm(w,r){ return r<=0?0:round(w*(1+r/30)); }
@@ -64,8 +67,8 @@ function sanitizeProfile(p,fallbackName,defaults){
   });
   let draft=null;
   if(_isObj(p.draft)&&typeof p.draft.routineId==='string'&&Array.isArray(p.draft.entries)){
-    const entries=p.draft.entries.filter(e=>_isObj(e)&&typeof e.exId==='string'&&Array.isArray(e.sets)&&e.sets.length).map(e=>({exId:e.exId,nudge:!!e.nudge,sets:e.sets.filter(_isObj).map(s=>({w:_num(s.w)?s.w:'',r:_num(s.r)?s.r:'',done:!!s.done}))})).filter(e=>e.sets.length);
-    if(entries.length) draft={routineId:p.draft.routineId,date:/^\d{4}-\d{2}-\d{2}$/.test(p.draft.date)?p.draft.date:'1970-01-01',entries};
+    const entries=p.draft.entries.filter(e=>_isObj(e)&&typeof e.exId==='string'&&Array.isArray(e.sets)&&e.sets.length).map(e=>({exId:e.exId,nudge:!!e.nudge,sets:e.sets.filter(_isObj).map(s=>({w:_num(s.w)?s.w:'',r:_num(s.r)?s.r:'',done:!!s.done,t:!!s.t}))})).filter(e=>e.sets.length);
+    if(entries.length) draft={editId:typeof p.draft.editId==='string'?p.draft.editId:undefined,routineId:p.draft.routineId,date:/^\d{4}-\d{2}-\d{2}$/.test(p.draft.date)?p.draft.date:'1970-01-01',entries};
   }
   return {name:_str(p.name,fallbackName,20),routines,customEx,logs,draft};
 }
@@ -77,4 +80,4 @@ function sanitizeState(o,defaults){
   const ids=Object.keys(profiles); if(!ids.length) return null;
   return {app:'lifts',v:typeof o.v==='number'?o.v:1,active:ids.includes(o.active)?o.active:ids[0],profiles};
 }
-if (typeof module!=='undefined') module.exports={sanitizeState,suggest,lastSession,e1rm,volume,bestByDate,validateImport,stepFor,round};
+if (typeof module!=='undefined') module.exports={daysBetween,sanitizeState,suggest,lastSession,e1rm,volume,bestByDate,validateImport,stepFor,round};

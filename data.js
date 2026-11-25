@@ -42,7 +42,8 @@ const EX_RAW = [
 ];
 const EQUIP_STEP = { barbell:2.5, dumbbell:2, machine:5, cable:5, bodyweight:1 };
 const STEP_LABEL = { barbell:'2.5 kg', dumbbell:'2 kg', machine:'5 kg', cable:'5 kg', bodyweight:'1 kg' };
-const BUILTIN = EX_RAW.map(([id,name,equip,muscle]) => ({id,name,equip,muscle}));
+const TIMED = ['plank','farmer']; // logged in seconds, not reps
+const BUILTIN = EX_RAW.map(([id,name,equip,muscle]) => ({id,name,equip,muscle,timed:TIMED.includes(id)}));
 const DEFAULT_ROUTINES = {
  push:{name:'Push',ex:['bench','dbinc','ohp','latraise','pushdown','ohext']},
  pull:{name:'Pull',ex:['deadlift','latpull','cablerow','facepull','curl','hammer']},

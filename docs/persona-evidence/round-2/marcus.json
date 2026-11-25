@@ -1,0 +1,18 @@
+{
+  "facts": {
+    "canSwapDuringWorkout": true,
+    "swapWorked": true,
+    "finishToast": "Workout saved",
+    "tapsDay1": 34,
+    "benchSuggestion": "102.5x8",
+    "dbSuggestion": "34x8",
+    "ohpSuggestion": "60x10 / 60x9",
+    "weightSelectedOnFocus": true,
+    "prToast": "Workout saved · New PR: Barbell Bench Press",
+    "untickedSetKept": true,
+    "taps": 58,
+    "appErrors": 0,
+    "errors": []
+  },
+  "findings": []
+}

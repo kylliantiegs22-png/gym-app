@@ -1,0 +1,15 @@
+{
+  "facts": {
+    "firstScreenMs": 714,
+    "accidentalTickBlocked": true,
+    "draftKeptAfterLock": true,
+    "setsTicked": 11,
+    "setsSaved": 11,
+    "nudges": [],
+    "plankWeightPlaceholder": "+kg",
+    "taps": 40,
+    "appErrors": 0,
+    "errors": []
+  },
+  "findings": []
+}

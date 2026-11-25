@@ -1,0 +1,14 @@
+{
+  "facts": {
+    "squatAfterBreak": "100x12",
+    "nudgesAfterBreak": 0,
+    "mentionsGap": true,
+    "bestShown": "1000",
+    "canEditPastWorkout": true,
+    "bestAfterFix": "200",
+    "taps": 30,
+    "appErrors": 0,
+    "errors": []
+  },
+  "findings": []
+}

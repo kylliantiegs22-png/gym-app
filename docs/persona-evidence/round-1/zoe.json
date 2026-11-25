@@ -1,0 +1,20 @@
+{
+  "facts": {
+    "offlineColdOpenMs": 190,
+    "tapSizes": [
+      "116x44",
+      "44x44",
+      "57x44"
+    ],
+    "hasRestTimer": false,
+    "usesWakeLock": false,
+    "offlineExport": true,
+    "taps": 22,
+    "appErrors": 0,
+    "errors": []
+  },
+  "findings": [
+    "major: No rest timer. She is counting rest on the phone clock, switching away from the app between sets.",
+    "major: Screen is not kept awake during a workout: the phone locks between sets, and she has to unlock with a wet thumb every time."
+  ]
+}

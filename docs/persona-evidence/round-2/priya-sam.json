@@ -1,0 +1,15 @@
+{
+  "facts": {
+    "workoutShowsWhoseIsIt": true,
+    "samSeesPriyaNumbers": false,
+    "priyaDraftWaiting": true,
+    "priyaValuesIntact": true,
+    "logsPriya": 0,
+    "logsSam": 1,
+    "priyaNext": "40x10",
+    "taps": 33,
+    "appErrors": 0,
+    "errors": []
+  },
+  "findings": []
+}
