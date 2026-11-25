@@ -14,6 +14,8 @@ async function newPersona(b,name,{offline=false}={}){
   P.say=s=>{P.log.push(s);};P.find=(sev,s)=>{P.findings.push(sev+': '+s);P.log.push('  ⚑ '+sev+': '+s);};
   P.day=async(iso)=>{await pg.clock.setFixedTime(new Date(iso+'T18:00:00'));};
   P.shot=async n=>{await pg.waitForTimeout(250);await pg.screenshot({path:`${EV}/${name}-${n}.png`});};
+  P.nav=async t=>{await P.tap('#menu');await P.tap('#tabs a[data-tab='+t+']');};
+  P.prof=async id=>{await P.tap('#menu');await P.tap('#people [data-id='+id+']');};
   P.tap=async(sel)=>{P.taps++;await pg.click(sel);};
   P.type=async(sel,v)=>{P.taps++;await pg.fill(sel,''+v);};
   P.screen=async(label)=>{const t=(await pg.locator('main').innerText()).replace(/\n+/g,' | ').slice(0,260);P.say(`[${label}] ${t}`);};
@@ -32,10 +34,10 @@ const done=async P=>{P.facts.taps=P.taps;P.facts.appErrors=P.errs.length;P.facts
 async function bea(b){const P=await newPersona(b,'bea');const {pg}=P;
   await P.day('2026-11-26');const t0=Date.now();await P.open();P.facts.firstScreenMs=Date.now()-t0;await P.screen('home');
   P.say('She edits Full Body: swaps Barbell Row for Push-Up and Triceps Pushdown for Plank (nothing heavy yet).');
-  await P.tap('#tabs a[data-tab=routines]');await P.tap('[data-act=goto][data-to="#/editor/full"]');
+  await P.nav('routines');await P.tap('[data-act=goto][data-to="#/editor/full"]');
   await P.tap('[data-act=swap][data-i="2"]');await P.type('#edq','Push-Up');await P.tap('[data-act=pick]');
   await P.tap('[data-act=swap][data-i="5"]');await P.type('#edq','Plank');await P.tap('[data-act=pick]');
-  await P.tap('#tabs a[data-tab=home]');await P.tap('[data-act=start][data-id=full]');await pg.waitForSelector('.set');await P.shot('workout');
+  await P.nav('home');await P.tap('[data-act=start][data-id=full]');await pg.waitForSelector('.set');await P.shot('workout');
   P.say('Squat: empty bar 20 kg x10, x10, x8.');for(const [j,r] of [[0,10],[1,10],[2,8]])await P.set(0,j,20,r);
   P.say('Bench: bar only 20 kg x8, x8, then taps the tick on set 3 by accident (nothing typed).');
   await P.set(1,0,20,8);await P.set(1,1,20,8);await P.tap('[data-e="1"] [data-act=chk][data-j="2"]');
@@ -72,7 +74,7 @@ async function marcus(b){const P=await newPersona(b,'marcus');const {pg}=P;
   P.say('Bench is busy next time, so he wants to swap exercise 4 (Lateral Raise) for Cable Lateral Raise mid-workout.');
   const swapInWorkout=await pg.locator('[data-act=swapwk], [data-act=swap]').count();P.facts.canSwapDuringWorkout=swapInWorkout>0;
   if(!swapInWorkout)P.find('major','No way to swap or add an exercise during a workout (machine taken). He must leave, edit the routine permanently, and come back.');
-  if(swapInWorkout){await P.tap('[data-e="3"] [data-act=swapwk]');await P.type('#wkq','Cable Lateral');await P.tap('[data-act=wkpick]');await P.set(3,0,7,12);P.say('He swaps to '+(await pg.locator('[data-e="3"] b').first().innerText())+' and logs 7 kg x12.');P.facts.swapWorked=/Cable Lateral/.test(await pg.locator('[data-e="3"] b').first().innerText());}
+  if(swapInWorkout){await P.tap('[data-e="3"] [data-act=swapwk]');await P.type('#wkq','Cable Lateral');await P.tap('[data-act=wkpick]');await P.set(3,0,7,12);P.say('He swaps to '+(await pg.locator('[data-e="3"] .exname').first().innerText())+' and logs 7 kg x12.');P.facts.swapWorked=/cable lateral/i.test(await pg.locator('[data-e="3"] .exname').first().innerText());}
   await P.tap('[data-act=finish]');await pg.waitForSelector('text=Recent');
   const toast1=await pg.locator('#toast').innerText();P.say('Toast on finish: "'+toast1+'"');P.facts.finishToast=toast1;
   P.facts.tapsDay1=P.taps-t0;
@@ -98,24 +100,24 @@ async function marcus(b){const P=await newPersona(b,'marcus');const {pg}=P;
   if(!/PR/.test(t2))P.find('minor','No acknowledgement of a personal record when he lifts a PR.');
   const st8=await P.store();const lastLog=st8.profiles.p1.logs[st8.profiles.p1.logs.length-1];P.facts.untickedSetKept=lastLog.entries[0].sets.length===2;
   if(!P.facts.untickedSetKept)P.find('major','A set he typed but forgot to tick was silently dropped at Finish.');
-  await P.tap('#tabs a[data-tab=progress]');await pg.waitForSelector('#prsel');await P.shot('progress');
+  await P.nav('progress');await pg.waitForSelector('#prsel');await P.shot('progress');
   const body=await pg.locator('main').innerText();P.say('Progress: '+body.replace(/\n+/g,' | ').slice(0,200));
   await done(P);}
 
 // ---------- Priya & Sam: one phone, two people ----------
 async function couple(b){const P=await newPersona(b,'priya-sam');const {pg}=P;
   await P.day('2026-11-25');await P.open();
-  await P.type('#pname','Priya');await P.tap('[data-act=rename]');await P.tap('[data-act=profile][data-id=p2]');await P.type('#pname','Sam');await P.tap('[data-act=rename]');await P.tap('[data-act=profile][data-id=p1]');
+  await P.type('#pname','Priya');await P.tap('[data-act=rename]');await P.prof('p2');await P.type('#pname','Sam');await P.tap('[data-act=rename]');await P.prof('p1');
   P.say('Priya starts Full Body, logs squat 40x10 x3, then hands the phone to Sam at the rack.');
   await P.tap('[data-act=start][data-id=full]');await pg.waitForSelector('.set');
   const hdr=await pg.locator('h1').innerText();const mainTxt=await pg.locator('main').innerText();P.facts.workoutShowsWhoseIsIt=/Priya/.test(mainTxt);
   if(!P.facts.workoutShowsWhoseIsIt)P.find('major','The workout screen never says whose workout it is. If the phone is passed around, sets can be logged into the wrong person.');
   for(let j=0;j<3;j++)await P.set(0,j,40,10);
-  await P.tap('#tabs a[data-tab=home]');await P.tap('[data-act=profile][data-id=p2]');
+  await P.nav('home');await P.prof('p2');
   P.say('Sam starts Full Body: squat 80x8 x3.');await P.tap('[data-act=start][data-id=full]');await pg.waitForSelector('.set');
   const sam=await P.read(0,0);P.facts.samSeesPriyaNumbers=sam.w==='40';if(sam.w==='40')P.find('blocker','Sam sees Priya\'s weights.');
   for(let j=0;j<3;j++)await P.set(0,j,80,8);await P.tap('[data-act=finish]');await pg.waitForSelector('text=Recent');
-  await P.tap('[data-act=profile][data-id=p1]');await P.screen('Priya home');
+  await P.prof('p1');await P.screen('Priya home');
   const resume=await pg.locator('text=Workout in progress').count();P.facts.priyaDraftWaiting=resume===1;
   await P.tap('[data-act=goto][data-to="#/workout"]');await pg.waitForSelector('.set');const pr=await P.read(0,2);P.facts.priyaValuesIntact=pr.w==='40'&&pr.r==='10';
   const st=await P.store();P.facts.logsPriya=st.profiles.p1.logs.length;P.facts.logsSam=st.profiles.p2.logs.length;
@@ -136,18 +138,18 @@ async function dev(b){const P=await newPersona(b,'dev');const {pg}=P;
   const days=await pg.locator('main').innerText();P.facts.mentionsGap=/Welcome back|weeks/.test(days);P.say('Workout screen says: '+days.replace(/\n+/g,' | ').slice(0,170));
   if(nud&&!P.facts.mentionsGap)P.find('major',`After a 7-week gap the app says "Go heavier" on ${nud} lift(s) and never mentions the gap. A returning lifter could injure themselves following it.`);
   P.say('He lowers squat to 70x10, and he removes Leg Extension from his routine because of his knee (the routine editor).');
-  await P.tap('[data-act=discard]');await P.tap('#tabs a[data-tab=routines]');await P.tap('[data-act=goto][data-to="#/editor/legs"]');
+  await P.tap('[data-act=discard]');await P.nav('routines');await P.tap('[data-act=goto][data-to="#/editor/legs"]');
   await pg.locator('[data-e], .card:has-text("Leg Extension") [data-act=rm]').first().click().catch(()=>{});
-  await P.tap('#tabs a[data-tab=progress]');await pg.waitForSelector('#prsel');
+  await P.nav('progress');await pg.waitForSelector('#prsel');
   await pg.selectOption('#prsel','legpress');const txt=await pg.locator('main').innerText();P.say('Progress for Leg Press: '+txt.replace(/\n+/g,' | ').slice(0,200));
   P.facts.bestShown=(txt.match(/Top weight (\d+)/)||[])[1];
   P.say('He notices the 1000 kg typo from six weeks ago and wants to fix it.');
-  await P.tap('#tabs a[data-tab=home]');await pg.waitForSelector('text=Recent');const edit=await pg.locator('[data-act=editlog]').count();P.facts.canEditPastWorkout=edit>0;
+  await P.nav('home');await pg.waitForSelector('text=Recent');const edit=await pg.locator('[data-act=editlog]').count();P.facts.canEditPastWorkout=edit>0;
   if(!edit)P.find('major','A mistyped weight in a past workout cannot be corrected. The only option is Delete, losing the whole session, and the 1000 kg ruins his Progress chart and best.');
   if(edit){await P.tap('[data-act=editlog]');await pg.waitForSelector('.set');P.say('He taps Edit on the old session and corrects the leg press set.');
-    const li=await pg.locator('[data-e]').evaluateAll(els=>els.map((e,i)=>[i,e.querySelector('b').textContent]));const lp=li.find(x=>/Leg Press/.test(x[1]))[0];
+    const li=await pg.locator('[data-e]').evaluateAll(els=>els.map((e,i)=>[i,e.querySelector('.exname').textContent]));const lp=li.find(x=>/Leg Press/.test(x[1]))[0];
     await P.type(`[data-e="${lp}"] [data-f=w][data-j="1"]`,200);await P.tap('[data-act=finish]');await pg.waitForSelector('text=Recent');
-    await P.tap('#tabs a[data-tab=progress]');await pg.waitForSelector('#prsel');await pg.selectOption('#prsel','legpress');
+    await P.nav('progress');await pg.waitForSelector('#prsel');await pg.selectOption('#prsel','legpress');
     P.facts.bestAfterFix=((await pg.locator('main').innerText()).match(/Top weight (\d+)/)||[])[1];P.say('Leg Press best after the fix: '+P.facts.bestAfterFix+' kg.');}
   await P.shot('home-history');await done(P);}
 
@@ -169,7 +171,7 @@ async function zoe(b){const P=await newPersona(b,'zoe');const {pg,ctx}=P;
   if(!P.facts.usesWakeLock)P.find('major','Screen is not kept awake during a workout: the phone locks between sets, and she has to unlock with a wet thumb every time.');
   for(let j=0;j<3;j++)await P.set(1,j,40,10);
   await P.tap('[data-act=finish]');await pg.waitForSelector('text=Recent');
-  await P.tap('#tabs a[data-tab=data]');const [dl]=await Promise.all([pg.waitForEvent('download'),P.tap('[data-act=export]')]);P.facts.offlineExport=!!(await dl.path());
+  await P.nav('data');const [dl]=await Promise.all([pg.waitForEvent('download'),P.tap('[data-act=export]')]);P.facts.offlineExport=!!(await dl.path());
   await P.screen('data');await P.shot('offline-data');
   await ctx.setOffline(false);await done(P);}
 

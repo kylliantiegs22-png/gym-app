@@ -1,4 +1,6 @@
 // Visual sweep: every screen, light+dark, 390x844. node tests/sweep.js  (server on :8080, axe-core path via AXE env)
+const nav=async(pg,t)=>{await pg.click('#menu');await pg.click('#tabs a[data-tab='+t+']');};
+const prof=async(pg,id)=>{await pg.click('#menu');await pg.click('#people [data-id='+id+']');};
 const {chromium}=require('playwright');const fs=require('fs');
 const AXE=fs.readFileSync(process.env.AXE||'/tmp/axe/node_modules/axe-core/axe.min.js','utf8');
 const OUT=process.env.OUT||'/tmp/sweep';fs.mkdirSync(OUT,{recursive:true});
@@ -18,16 +20,16 @@ for(const scheme of ['light','dark']){
   const c=await b.newContext({viewport:{width:390,height:844},colorScheme:scheme,deviceScaleFactor:1});const pg=await c.newPage();pg.on('dialog',d=>d.accept());
   const errs=[];pg.on('pageerror',e=>errs.push(e.message));pg.on('console',m=>{if(m.type()==='error')errs.push(m.text());});pg.on('requestfailed',r=>errs.push('reqfail '+r.url()));
   const shot=async n=>{await pg.waitForTimeout(150);await pg.screenshot({path:`${OUT}/${scheme}-${n}.png`,fullPage:true});await checks(pg,scheme+' '+n);};
-  await pg.goto('http://localhost:8080/');await pg.waitForSelector('h1');await shot('home-empty');
+  await pg.goto('http://localhost:8080/');await pg.waitForSelector('h1');await shot('home-empty');await pg.click('#menu');await pg.waitForTimeout(400);await shot('drawer-open');await pg.keyboard.press('Escape');
   await pg.click('[data-act=start][data-id=push]');await pg.waitForSelector('.set');await shot('workout-empty');
   for(const [i,w] of [[0,60],[1,20]])for(let j=0;j<3;j++){await pg.fill(`[data-e="${i}"] [data-f=w][data-j="${j}"]`,''+w);await pg.fill(`[data-e="${i}"] [data-f=r][data-j="${j}"]`,'12');await pg.click(`[data-e="${i}"] [data-act=chk][data-j="${j}"]`);}
   await shot('workout-filled');await pg.click('[data-act=finish]');await pg.waitForSelector('text=Recent');await shot('home-with-log');
   await pg.click('[data-act=start][data-id=push]');await pg.waitForSelector('.set');await shot('workout-nudge');await pg.click('[data-act=discard]');
-  await pg.click('#tabs a[data-tab=progress]');await pg.waitForSelector('#prsel');await shot('progress');
-  await pg.click('#tabs a[data-tab=routines]');await shot('routines');
+  await nav(pg,'progress');await pg.waitForSelector('#prsel');await shot('progress');
+  await nav(pg,'routines');await shot('routines');
   await pg.click('[data-act=goto][data-to="#/editor/push"]');await shot('editor');
-  await pg.click('#tabs a[data-tab=data]');await shot('data');
-  await pg.click('#tabs a[data-tab=progress]');await pg.evaluate(()=>{localStorage.clear()});await pg.reload();await shot('progress-empty');
+  await nav(pg,'data');await shot('data');
+  await nav(pg,'progress');await pg.evaluate(()=>{localStorage.clear()});await pg.reload();await shot('progress-empty');
   console.log(scheme,'console/page errors:',errs.length?errs:'none');if(errs.length)hard++;
 }
 await b.close();console.log(hard?`${hard} screens with problems`:'sweep clean');process.exit(hard?1:0);})();

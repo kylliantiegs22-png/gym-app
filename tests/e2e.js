@@ -1,4 +1,6 @@
 const {chromium,webkit}=require('playwright');
+const nav=async(pg,t)=>{await pg.click('#menu');await pg.click('#tabs a[data-tab='+t+']');};
+const prof=async(pg,id)=>{await pg.click('#menu');await pg.click('#people [data-id='+id+']');};
 const URL='http://localhost:8080/';let pass=0,fail=0;
 const ok=(c,m)=>{if(c){pass++;}else{fail++;console.log('FAIL:',m);}};
 async function run(type,name){
@@ -24,34 +26,34 @@ async function run(type,name){
   // draft persistence
   await pg.fill('[data-e="0"] [data-f=r][data-j="0"]','9');await pg.reload();
   await pg.waitForSelector('[data-e="0"]');
-  await pg.click('#tabs a[data-tab=home]');
+  await nav(pg,'home');
   await pg.waitForSelector('text=Workout in progress');ok(true,name+' draft survives reload');
   await pg.click('[data-act=goto]');await pg.waitForSelector('[data-e="0"]');
   ok(await pg.inputValue('[data-e="0"] [data-f=r][data-j="0"]')==='9',name+' draft value kept');
   await pg.click('[data-act=discard]');await pg.waitForSelector('[data-act=start]');
   // editor: swap, add, remove, custom
-  await pg.click('#tabs a[data-tab=routines]');await pg.click('[data-act=goto][data-to="#/editor/push"]');
+  await nav(pg,'routines');await pg.click('[data-act=goto][data-to="#/editor/push"]');
   await pg.click('[data-act=swap][data-i="0"]');await pg.fill('#edq','Incline Barbell');await pg.click('[data-act=pick]');
   ok(await pg.locator('text=Incline Barbell Press').count()>=1,name+' swap');
   await pg.click('[data-act=rm][data-i="5"]');ok(await pg.locator('[data-act=rm]').count()===5,name+' remove');
-  await pg.click('#tabs a[data-tab=routines]');await pg.fill('#cxname','Sled Push');await pg.click('[data-act=addcustom]');
+  await nav(pg,'routines');await pg.fill('#cxname','Sled Push');await pg.click('[data-act=addcustom]');
   await pg.click('[data-act=goto][data-to="#/editor/push"]');await pg.fill('#edq','Sled');await pg.click('[data-act=pick]');
   ok(await pg.locator('text=Sled Push').count()>=1,name+' custom exercise');
   // progress
-  await pg.click('#tabs a[data-tab=progress]');await pg.waitForSelector('#prsel');
+  await nav(pg,'progress');await pg.waitForSelector('#prsel');
   ok(await pg.locator('text=Top weight 60 kg').count()===1,name+' progress best');
   // profiles are separate
-  await pg.click('#tabs a[data-tab=home]');await pg.click('[data-act=profile][data-id=p2]');
+  await nav(pg,'home');await prof(pg,'p2');
   ok(await pg.locator('text=No workouts yet').count()===1,name+' partner empty');
-  await pg.click('[data-act=profile][data-id=p1]');
+  await prof(pg,'p1');
   // export / restore
-  await pg.click('#tabs a[data-tab=data]');
+  await nav(pg,'data');
   const [dl]=await Promise.all([pg.waitForEvent('download'),pg.click('[data-act=export]')]);
   const path=await dl.path();const fs=require('fs');const json=fs.readFileSync(path,'utf8');ok(JSON.parse(json).app==='lifts',name+' export');
-  await pg.click('[data-act=erase]');await pg.click('#tabs a[data-tab=data]');
+  await pg.click('[data-act=erase]');await nav(pg,'data');
   await pg.setInputFiles('#imp',path);await pg.waitForSelector('text=Recent');
-  ok(await pg.locator('.card:has-text("sets")').count()>=1,name+' restore brought back log');
-  const bad='/tmp/bad.json';fs.writeFileSync(bad,'{"x":1}');await pg.click('#tabs a[data-tab=data]');await pg.setInputFiles('#imp',bad);
+  ok(await pg.locator('.logrow').count()>=1,name+' restore brought back log');
+  const bad='/tmp/bad.json';fs.writeFileSync(bad,'{"x":1}');await nav(pg,'data');await pg.setInputFiles('#imp',bad);
   ok(await pg.locator('#toast.show').count()===1,name+' bad import rejected');
   // offline
   await pg.goto(URL);await pg.evaluate(()=>navigator.serviceWorker.ready);await pg.reload();

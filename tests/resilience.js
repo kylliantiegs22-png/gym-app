@@ -1,4 +1,6 @@
 // Saved-data resilience probe. node tests/resilience.js (server on :8080)
+const nav=async(pg,t)=>{await pg.click('#menu');await pg.click('#tabs a[data-tab='+t+']');};
+const prof=async(pg,id)=>{await pg.click('#menu');await pg.click('#people [data-id='+id+']');};
 const {chromium}=require('playwright');const KEY='lifts.v1';const URL='http://localhost:8080/';
 const good=()=>{const r={push:{name:'Push',ex:['bench','ohp']}};const log={id:'a',date:'2026-01-02',routineId:'push',name:'Push',entries:[{exId:'bench',sets:[{w:60,r:12,done:true}]}]};
   const pr=n=>({name:n,routines:r,customEx:[],logs:[log],draft:null});return {app:'lifts',v:1,active:'p1',profiles:{p1:pr('Me'),p2:pr('Partner')}};};
@@ -36,7 +38,7 @@ async function drive(pg){
   if(await pg.locator('[data-act=discard]').count())await pg.click('[data-act=discard]'); // use the app: start, log, finish, visit all tabs
   await pg.click('[data-act=start]');await pg.waitForSelector('.set',{timeout:4000});
   await pg.fill('[data-f=w][data-j="0"]','50');await pg.fill('[data-f=r][data-j="0"]','10');await pg.click('[data-act=chk][data-j="0"]');await pg.click('[data-act=finish]');
-  for(const t of ['progress','routines','data','home']){await pg.click(`#tabs a[data-tab=${t}]`);await pg.waitForTimeout(80);const h=await healthy(pg);if(h)return t+': '+h;}return null;}
+  for(const t of ['progress','routines','data','home']){await nav(pg,t);await pg.waitForTimeout(80);const h=await healthy(pg);if(h)return t+': '+h;}return null;}
 (async()=>{const b=await chromium.launch();
 for(const sc of S){const {pg,c,errs}=await open(b,sc.seed);let prob=await healthy(pg);
   if(!prob){try{prob=await drive(pg);}catch(e){prob='drive: '+e.message.split('\n')[0];}}
@@ -50,11 +52,11 @@ for(const [n,o] of [['storage full',{quota:true}],['storage blocked',{blocked:tr
 {const {pg,c}=await open(b,'{"app":"lifts","prof');await healthy(pg);const bk=await pg.evaluate(()=>Object.keys(localStorage).filter(k=>k.startsWith('lifts.v1.')&&localStorage.getItem(k).includes('"prof')).length);
   const said=await pg.locator('[data-testid=load-warning]').count();const prob=!bk?'original unreadable data was overwritten, no backup':(!said?'user not told':null);console.log((prob?'✗ ':'✓ ')+'unreadable JSON: backup kept + user told'+(prob?'  → '+prob:''));if(prob)fail++;await c.close();}
 // partly corrupt: valid parts are kept
-{const {pg,c}=await open(b,s=>{s.profiles.p1.logs.push(null);s.profiles.p1.routines.junk=null;});await healthy(pg);const t=await pg.locator('main').innerText();const prob=/Push/.test(t)&&/1 sets|1 set/.test(t)?null:'valid workout/routine lost';console.log((prob?'✗ ':'✓ ')+'partly corrupt: valid data kept'+(prob?'  → '+prob:''));if(prob)fail++;await c.close();}
+{const {pg,c}=await open(b,s=>{s.profiles.p1.logs.push(null);s.profiles.p1.routines.junk=null;});await healthy(pg);const t=await pg.locator('main').innerText();const prob=/push/i.test(t)&&/1 sets?/i.test(t)?null:'valid workout/routine lost';console.log((prob?'✗ ':'✓ ')+'partly corrupt: valid data kept'+(prob?'  → '+prob:''));if(prob)fail++;await c.close();}
 // two tabs
-{const c=await b.newContext();const a=await c.newPage(),d=await c.newPage();a.on('dialog',x=>x.accept());d.on('dialog',x=>x.accept());await a.goto(URL);await d.goto(URL);await a.waitForSelector('h1');await d.waitForSelector('h1');
+{const c=await b.newContext({viewport:{width:390,height:844}});const a=await c.newPage(),d=await c.newPage();a.on('dialog',x=>x.accept());d.on('dialog',x=>x.accept());await a.goto(URL);await d.goto(URL);await a.waitForSelector('h1');await d.waitForSelector('h1');
   await a.click('[data-act=start][data-id=push]');await a.waitForSelector('.set');await a.fill('[data-f=w][data-j="0"]','77');await a.fill('[data-f=r][data-j="0"]','5');await a.click('[data-act=chk][data-j="0"]');await a.click('[data-act=finish]');await a.waitForSelector('text=Recent');
-  await d.click('[data-act=profile][data-id=p2]');await d.waitForTimeout(300);await a.reload();await a.waitForSelector('h1');
+  await prof(d,'p2');await d.waitForTimeout(300);await a.reload();await a.waitForSelector('h1');
   const logs=await a.evaluate(()=>JSON.parse(localStorage.getItem('lifts.v1')).profiles.p1.logs.length);const prob=logs===1?null:'other tab overwrote the workout saved in this tab (logs='+logs+')';console.log((prob?'✗ ':'✓ ')+'two tabs: nothing lost'+(prob?'  → '+prob:''));if(prob)fail++;await c.close();}
 // render error → recovery screen
 {const {pg,c}=await open(b,null);await pg.waitForSelector('h1');await pg.evaluate(()=>{window.__boom=true;});

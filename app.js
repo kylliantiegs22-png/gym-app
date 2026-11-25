@@ -2,6 +2,8 @@
 const KEY='lifts.v1';
 const $app=document.getElementById('app');
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const shortDate=iso=>{const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(iso||'');return m?(+m[3])+' '+MON[+m[2]-1]:String(iso||'');};
 const uid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4);
 const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
 
@@ -43,7 +45,14 @@ function route(){
   catch(e){
     $app.innerHTML=`<h1>Something went wrong</h1><p class="mute">Your workouts are safe. Export a copy, then reload.</p><div class="row"><button class="primary" data-act="rawexport">Export raw data</button><button data-act="reload">Reload</button></div>`;
   }
-  banner(); updateRest(); wake();
+  closeMenu(); drawer(); banner(); updateRest(); wake();
+}
+function closeMenu(){ document.body.classList.remove('open'); const m=document.getElementById('menu'); if(m) m.setAttribute('aria-expanded','false'); }
+function drawer(){
+  const p=P();
+  document.getElementById('people').innerHTML=Object.entries(S.profiles).map(([id,pr])=>`<button data-act="profile" data-id="${id}" class="${id===S.active?'on':''}" aria-pressed="${id===S.active}">${esc(pr.name)}</button>`).join('');
+  document.getElementById('who').textContent=p.name;
+  document.getElementById('side-status').innerHTML=p.draft?`Workout in progress. <a href="#/workout">Resume</a>`:'Stored on this phone only.';
 }
 function draw(){
   const h=(location.hash||'#/').slice(2); const [page,arg]=h.split('/');
@@ -57,13 +66,13 @@ window.addEventListener('hashchange',route);
 function home(){
   const p=P();
   const recent=p.logs.slice(-5).reverse();
-  $app.innerHTML=`<div class="hero"><h1>Lifts</h1><p>Who’s lifting today?</p><div class="seg" role="group" aria-label="Person">${Object.entries(S.profiles).map(([id,pr])=>`<button data-act="profile" data-id="${id}" class="${id===S.active?'on':''}">${esc(pr.name)}</button>`).join('')}</div></div>
-  ${p.draft?`<div class="card"><b>Workout in progress</b><div class="mute">${esc(p.routines[p.draft.routineId]?.name||'Workout')} · ${p.draft.date}</div><div class="row" style="margin-top:8px"><button class="primary grow" data-act="goto" data-to="#/workout">Resume</button><button class="danger" data-act="discard">Discard</button></div></div>`:''}
-  <h2>Start a workout</h2>
-  ${Object.entries(p.routines).map(([id,r])=>{const last=[...p.logs].reverse().find(l=>l.routineId===id);return `<div class="card row between"><div><b>${esc(r.name)}</b><div class="mute">${r.ex.length} exercises${last?' · last '+last.date:''}</div></div><button class="primary" data-act="start" data-id="${id}" ${p.draft?'disabled':''}>Start</button></div>`}).join('')}
+  $app.innerHTML=`<div class="kicker">${esc(p.name)} · ${today()}</div><h1>Train</h1>
+  ${p.draft?`<div class="block"><b>Workout in progress</b><div class="mute">${esc(p.routines[p.draft.routineId]?.name||'Workout')} · ${p.draft.date}</div><div class="row" style="margin-top:10px"><button class="primary grow" data-act="goto" data-to="#/workout">Resume</button><button class="danger" data-act="discard">Discard</button></div></div>`:''}
+  <h2>Pick a session</h2>
+  <div class="rows">${Object.entries(p.routines).map(([id,r])=>{const last=[...p.logs].reverse().find(l=>l.routineId===id);return `<div class="rrow"><div class="grow"><b>${esc(r.name)}</b><div class="mute">${r.ex.length} exercises${last?' · last '+shortDate(last.date):''}</div></div><button class="primary" data-act="start" data-id="${id}" ${p.draft?'disabled':''}>Start</button></div>`}).join('')}</div>
   <h2>Recent</h2>
-  ${recent.length?recent.map(l=>`<div class="card row between"><div><b>${esc(p.routines[l.routineId]?.name||l.name||'Workout')}</b><div class="mute">${l.date} · ${l.entries.reduce((a,e)=>a+e.sets.filter(s=>s.done).length,0)} sets · ${Math.round(l.entries.reduce((a,e)=>a+volume(e),0))} kg volume</div></div><div class="row"><button class="small" data-act="editlog" data-id="${l.id}">Edit</button><button class="small danger" data-act="dellog" data-id="${l.id}">Delete</button></div></div>`).join(''):'<p class="mute">No workouts yet.</p>'}
-  <h2>Names</h2><div class="row"><input id="pname" value="${esc(p.name)}" maxlength="20" aria-label="Your name"><button data-act="rename">Save</button></div>`;
+  ${recent.length?recent.map(l=>`<div class="logrow"><div><b>${esc(p.routines[l.routineId]?.name||l.name||'Workout')}</b><div class="mute">${shortDate(l.date)} · ${l.entries.reduce((a,e)=>a+e.sets.filter(s=>s.done).length,0)} sets · ${Math.round(l.entries.reduce((a,e)=>a+volume(e),0))} kg volume</div></div><div class="row"><button class="small" data-act="editlog" data-id="${l.id}">Edit</button><button class="small danger" data-act="dellog" data-id="${l.id}">Delete</button></div></div>`).join(''):'<p class="mute">No workouts yet.</p>'}
+  <h2>Your name</h2><div class="row"><input id="pname" value="${esc(p.name)}" maxlength="20" aria-label="Your name"><button data-act="rename">Save</button></div>`;
 }
 
 // ---------- workout ----------
@@ -83,9 +92,9 @@ function workout(){
   const q=wkQuery.toLowerCase(),inUse=d.entries.map(e=>e.exId);
   const matches=wkPick?allEx().filter(e=>!inUse.includes(e.id)&&(!q||e.name.toLowerCase().includes(q)||e.muscle.toLowerCase().includes(q))).slice(0,30):[];
   $app.innerHTML=`<h1>${esc(p.routines[d.routineId]?.name||'Workout')}</h1><div class="mute"><b>${esc(p.name)}</b> · ${d.date}${d.editId?' · editing a past workout':' · target '+REP_MIN+'–'+REP_MAX+' reps'}</div>
-  ${gap>28?`<div class="card"><b>Welcome back</b><div class="mute">It has been ${Math.round(gap/7)} weeks since a lift here. Last weights are shown, with no “go heavier”. Ease in.</div></div>`:''}
+  ${gap>28?`<div class="note"><b>Welcome back</b><div class="mute">It has been ${Math.round(gap/7)} weeks since a lift here. Last weights are shown, with no “go heavier”. Ease in.</div></div>`:''}
   ${d.entries.map((e,i)=>{const ex=exById(e.exId);const last=lastSession(p.logs,e.exId);const wph=ex.equip==='bodyweight'||ex.timed?'+kg':'kg';return `<div class="card" data-e="${i}">
-   <div class="row between"><div class="grow"><b>${esc(ex.name)}</b> ${e.nudge?`<span class="nudge">Go heavier +${STEP_LABEL[ex.equip]}</span>`:''}<div class="mute">${last?'Last: '+last.sets.map(s=>fmtSet(s,ex)).join(', ')+weeksAgo(last.date):'First time — pick a comfortable weight'}</div></div>${d.editId?'':`<button class="small" data-act="swapwk" data-i="${i}">Swap</button>`}</div>
+   <div class="row between"><div class="grow"><span class="exname">${esc(ex.name)}</span> ${e.nudge?`<span class="nudge">Go heavier +${STEP_LABEL[ex.equip]}</span>`:''}<div class="mute">${last?'Last: '+last.sets.map(s=>fmtSet(s,ex)).join(', ')+weeksAgo(last.date):'First time — pick a comfortable weight'}</div></div>${d.editId?'':`<button class="small" data-act="swapwk" data-i="${i}">Swap</button>`}</div>
    ${e.sets.map((s,j)=>`<div class="set ${s.done?'done':''}"><span class="n">${j+1}</span>
     <input type="text" inputmode="decimal" autocomplete="off" placeholder="${wph}" aria-label="Set ${j+1} weight" value="${esc(s.w)}" data-f="w" data-i="${i}" data-j="${j}">
     <input type="text" inputmode="${ex.timed?'numeric':'numeric'}" autocomplete="off" placeholder="${ex.timed?'sec':'reps'}" aria-label="Set ${j+1} ${ex.timed?'seconds':'reps'}" value="${esc(s.r)}" data-f="r" data-i="${i}" data-j="${j}">
@@ -153,7 +162,7 @@ function progress(){
 }
 function chart(pts){
   if(!pts.length) return '<p class="mute">No data.</p>';
-  if(pts.length===1) return `<div style="padding:20px 4px;text-align:center"><div style="font-size:34px;font-weight:700;letter-spacing:-.02em">${pts[0].top} kg</div><div class="mute">Top weight on ${pts[0].date}. Log this lift again to see your trend.</div></div>`;
+  if(pts.length===1) return `<div style="padding:18px 0 10px"><div class="big">${pts[0].top}<span style="font-size:24px"> kg</span></div><div class="mute">Top weight on ${shortDate(pts[0].date)}. Log this lift again to see your trend.</div></div>`;
   const W=320,H=160,pad=24; const ys=pts.map(x=>x.top); let lo=Math.min(...ys),hi=Math.max(...ys); if(lo===hi){lo-=1;hi+=1;}
   const X=i=>pts.length===1?W/2:pad+i*(W-2*pad)/(pts.length-1), Y=v=>H-pad-(v-lo)/(hi-lo)*(H-2*pad);
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Top weight over time"><polyline fill="none" stroke="var(--accent)" stroke-width="2.5" points="${pts.map((x,i)=>X(i)+','+Y(x.top)).join(' ')}"/>${pts.map((x,i)=>`<circle cx="${X(i)}" cy="${Y(x.top)}" r="4" fill="var(--accent)"/>`).join('')}<text x="4" y="14" font-size="12" fill="var(--mute)">${hi} kg</text><text x="4" y="${H-6}" font-size="12" fill="var(--mute)">${lo} kg</text></svg>`;
@@ -181,9 +190,12 @@ function doImport(file){
 
 // ---------- events ----------
 document.addEventListener('click',ev=>{
+  if(ev.target.closest('#tabs a')) setTimeout(closeMenu,0);
   const b=ev.target.closest('[data-act]'); if(!b) return; const a=b.dataset.act,p=P(),id=b.dataset.id,i=+b.dataset.i,j=+b.dataset.j;
   switch(a){
     case 'goto': location.hash=b.dataset.to; break;
+    case 'menu': {const o=document.body.classList.toggle('open'); b.setAttribute('aria-expanded',String(o)); if(o) setTimeout(()=>{const f=document.querySelector('#people button.on')||document.querySelector('#tabs a'); f&&f.focus();},60); break;}
+    case 'closemenu': closeMenu(); break;
     case 'hidewarn': loadWarning=''; banner(); break;
     case 'hidesave': saveFailed=false; banner(); break;
     case 'reload': location.reload(); break;
@@ -223,6 +235,7 @@ document.addEventListener('click',ev=>{
     case 'erase': if(confirm('Erase ALL data on this phone?')&&confirm('This cannot be undone. Really erase?')){S=fresh(); save(); location.hash='#/'; route();} break;
   }
 });
+document.addEventListener('keydown',ev=>{ if(ev.key==='Escape') closeMenu(); });
 document.addEventListener('input',ev=>{
   const t=ev.target;
   if(t.dataset&&t.dataset.f){const s=P().draft.entries[+t.dataset.i].sets[+t.dataset.j];
